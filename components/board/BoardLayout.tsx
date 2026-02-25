@@ -120,7 +120,11 @@ export default function BoardLayout({ children }: { children: React.ReactNode })
                             onChange={(e) => setPasswordInput(e.target.value)}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
-                                    dbPassword === null ? handleCreatePassword() : handleUnlock();
+                                    if (dbPassword === null) {
+                                        handleCreatePassword();
+                                    } else {
+                                        handleUnlock();
+                                    }
                                 }
                             }}
                             className="text-center text-lg h-12"

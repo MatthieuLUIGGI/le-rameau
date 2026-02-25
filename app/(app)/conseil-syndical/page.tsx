@@ -173,7 +173,11 @@ export default function ConseilSyndicalPage() {
                             onChange={(e) => setPasswordInput(e.target.value)}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
-                                    dbPassword === null ? handleCreatePassword() : handleUnlock();
+                                    if (dbPassword === null) {
+                                        handleCreatePassword();
+                                    } else {
+                                        handleUnlock();
+                                    }
                                 }
                             }}
                             className="text-center text-lg h-12"
