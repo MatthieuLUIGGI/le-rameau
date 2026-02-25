@@ -3,7 +3,6 @@
 import { useUser } from "../../../lib/hooks/useUser";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { WeatherWidget } from "../../../components/dashboard/WeatherWidget";
 import { AnnounceFeed } from "../../../components/dashboard/AnnounceFeed";
 import { AlertBanner } from "../../../components/dashboard/AlertBanner";
 import { QuickActions } from "../../../components/dashboard/QuickActions";
@@ -34,8 +33,6 @@ export default function DashboardPage() {
             </div>
 
             <AlertBanner />
-
-            <WeatherWidget />
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <AnnounceFeed />
