@@ -11,6 +11,7 @@ import { toast } from "../../../../hooks/use-toast";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { logAction } from "../../../../lib/logger";
+import { createNotification } from "../../../../lib/notifications";
 
 interface DocumentBox {
     titre: string;
@@ -328,6 +329,7 @@ export default function AdminAssembleeGeneralePage() {
                     const response = await supabase.from('assemblee_generale').insert([updatedRow]).select().single();
                     if (user && !response.error && response.data) {
                         await logAction('Création', user.id, `${user.prenom} ${user.nom}`, user.email, `A créé une ligne de document AG`, null, response.data);
+                        await createNotification("Nouveau document AG", `Un nouveau document a été ajouté.`, "/ag", "ag");
                     }
                 } else {
                     const originalRow = existingRows?.find(r => r.id === row.id) || null;
@@ -338,6 +340,7 @@ export default function AdminAssembleeGeneralePage() {
                         const newToCompare = { ...response.data, updated_at: null };
                         if (JSON.stringify(originalToCompare) !== JSON.stringify(newToCompare)) {
                             await logAction('Modification', user.id, `${user.prenom} ${user.nom}`, user.email, `A modifié les documents AG`, originalRow, response.data);
+                            await createNotification("Document AG mis à jour", `Un document AG a été modifié.`, "/ag", "ag");
                         }
                     }
                 }

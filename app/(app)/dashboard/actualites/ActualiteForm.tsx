@@ -13,6 +13,7 @@ import { toast } from "../../../../hooks/use-toast";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { logAction } from "../../../../lib/logger";
+import { createNotification } from "../../../../lib/notifications";
 import { useUser } from "../../../../lib/hooks/useUser";
 import 'react-quill/dist/quill.snow.css';
 
@@ -103,6 +104,12 @@ export default function ActualiteForm({ initialData }: ActualiteFormProps) {
                     payload
                 );
             }
+            await createNotification(
+                initialData?.id ? "Actualité modifiée" : "Nouvelle actualité",
+                formData.titre,
+                "/actualites",
+                "actualite"
+            );
             toast({ title: "Succès", description: "L'actualité a bien été enregistrée." });
             router.push("/dashboard/actualites");
             router.refresh();
