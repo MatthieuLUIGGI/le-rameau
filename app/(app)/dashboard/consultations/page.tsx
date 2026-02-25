@@ -12,7 +12,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../../../components/ui/dialog";
 import { logAction } from "../../../../lib/logger";
-import { createNotification } from "../../../../lib/notifications";
+import { createNotification, deleteNotificationByEntity } from "../../../../lib/notifications";
 
 interface Option {
     id: string;
@@ -178,14 +178,15 @@ export default function AdminConsultationsPage() {
         }
 
         if (consultation.id.startsWith('new-')) {
-            const { error } = await supabase.from('consultations').insert([payload]);
+            const { data, error } = await supabase.from('consultations').insert([payload]).select('id').single();
             if (error) {
                 toast({ title: "Erreur", description: error.message, variant: "destructive" });
             } else {
                 if (user) {
                     await logAction('Création', user.id, `${user.prenom} ${user.nom}`, user.email, `A créé le sondage : ${consultation.question}`, null, payload);
                 }
-                await createNotification("Nouvelle consultation", `Le sondage "${consultation.question}" est disponible.`, "/consultations", "consultation");
+                const newId = data?.id;
+                await createNotification("Nouvelle consultation", `Le sondage "${consultation.question}" est disponible.`, "/consultations", "consultation", newId);
                 toast({ title: "Succès", description: "Le sondage a été créé." });
                 fetchData();
             }
@@ -197,7 +198,7 @@ export default function AdminConsultationsPage() {
                 if (user) {
                     await logAction('Modification', user.id, `${user.prenom} ${user.nom}`, user.email, `A mis à jour le sondage : ${consultation.question}`, originalConsultation, payload);
                 }
-                await createNotification("Consultation modifiée", `Le sondage "${consultation.question}" a été modifié.`, "/consultations", "consultation");
+                await createNotification("Consultation modifiée", `Le sondage "${consultation.question}" a été modifié.`, "/consultations", "consultation", consultation.id);
                 toast({ title: "Succès", description: "Le sondage a été mis à jour." });
             }
         }
@@ -225,6 +226,7 @@ export default function AdminConsultationsPage() {
                 const deletedItem = consultations.find(c => c.id === deleteConfirm.id);
                 await logAction('Suppression', user.id, `${user.prenom} ${user.nom}`, user.email, `A supprimé le sondage : ${deleteConfirm.name}`, deletedItem, null);
             }
+            await deleteNotificationByEntity(deleteConfirm.id);
             toast({ title: "Succès", description: "Le sondage a été supprimé." });
             setConsultations(prev => prev.filter(c => c.id !== deleteConfirm.id));
         }

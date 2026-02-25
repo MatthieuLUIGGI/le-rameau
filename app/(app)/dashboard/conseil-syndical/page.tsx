@@ -6,11 +6,13 @@ import { useUser } from "../../../../lib/hooks/useUser";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../../components/ui/card";
 import { Button } from "../../../../components/ui/button";
 import { Input } from "../../../../components/ui/input";
-import { Loader2, Plus, Trash2, UploadCloud, Link as LinkIcon, FileCheck, ArrowUp, ArrowDown, ArrowLeft } from "lucide-react";
+import { Loader2, Plus, Trash2, UploadCloud, Link as LinkIcon, FileCheck, ArrowUp, ArrowDown, ArrowLeft, Save } from "lucide-react";
 import { toast } from "../../../../hooks/use-toast";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { logAction } from "../../../../lib/logger";
+import { deleteNotificationByEntity } from "../../../../lib/notifications";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../../../components/ui/dialog";
 
 interface DocumentBox {
     titre: string;
@@ -28,7 +30,7 @@ interface ConseilRow {
 }
 
 // Extraction du composant pour éviter la perte de focus lors du re-rendu
-const BoxEditor = ({ row, rowIndex, col, label, handleBoxChange }: { row: ConseilRow, rowIndex: number, col: 'oj' | 'cr', label: string, handleBoxChange: (rowIndex: number, col: 'oj' | 'cr', field: keyof DocumentBox, value: any) => void }) => {
+const BoxEditor = ({ row, rowIndex, col, label, handleBoxChange, saveBox, isSavingBox }: { row: ConseilRow, rowIndex: number, col: 'oj' | 'cr', label: string, handleBoxChange: (rowIndex: number, col: 'oj' | 'cr', field: keyof DocumentBox, value: any) => void, saveBox: (rowIndex: number, col: 'oj' | 'cr') => void, isSavingBox: boolean }) => {
     const box = row[col];
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -49,7 +51,18 @@ const BoxEditor = ({ row, rowIndex, col, label, handleBoxChange }: { row: Consei
 
     return (
         <div className="flex-1 space-y-3 bg-muted/20 p-4 border border-border/50 rounded-xl relative">
-            <div className="font-semibold text-primary mb-2 border-b border-border/50 pb-2">{label}</div>
+            <div className="flex justify-between items-center mb-2 border-b border-border/50 pb-2">
+                <div className="font-semibold text-primary">{label}</div>
+                <Button
+                    size="sm"
+                    onClick={() => saveBox(rowIndex, col)}
+                    disabled={isSavingBox}
+                    className="h-7 text-xs px-2"
+                >
+                    {isSavingBox ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Save className="w-3 h-3 mr-1" />}
+                    Sauvegarder
+                </Button>
+            </div>
 
             <div className="space-y-1">
                 <label className="text-xs font-semibold text-muted-foreground">Titre de l'événement</label>
@@ -161,6 +174,8 @@ export default function AdminConseilSyndicalPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [rows, setRows] = useState<ConseilRow[]>([]);
+    const [isSavingBox, setIsSavingBox] = useState<{ rowIndex: number, col: string } | null>(null);
+    const [deleteConfirm, setDeleteConfirm] = useState<{ index: number, id: string } | null>(null);
 
     useEffect(() => {
         if (!userLoading && user && user.role !== 'ag') {
@@ -212,9 +227,14 @@ export default function AdminConseilSyndicalPage() {
         setRows(prev => [createEmptyRow(Date.now()), ...prev]);
     };
 
-    const removeRow = async (rowIndex: number, rowId: string) => {
-        const confirmDelete = window.confirm("Êtes-vous sûr de vouloir supprimer cette ligne complète ?");
-        if (!confirmDelete) return;
+    const confirmRemoveRow = (rowIndex: number, rowId: string) => {
+        setDeleteConfirm({ index: rowIndex, id: rowId });
+    };
+
+    const executeDelete = async () => {
+        if (!deleteConfirm) return;
+        setIsSaving(true);
+        const { index: rowIndex, id: rowId } = deleteConfirm;
 
         if (!rowId.startsWith('temp-')) {
             const supabase = createClient();
@@ -224,8 +244,11 @@ export default function AdminConseilSyndicalPage() {
             if (user) {
                 await logAction('Suppression', user.id, `${user.prenom} ${user.nom}`, user.email, `A supprimé une ligne de document du Conseil Syndical`, rowToDelete || null, null);
             }
+            await deleteNotificationByEntity(rowId);
         }
         setRows(prev => prev.filter((_, idx) => idx !== rowIndex));
+        setIsSaving(false);
+        setDeleteConfirm(null);
     };
 
     const moveRowUp = (index: number) => {
@@ -281,13 +304,81 @@ export default function AdminConseilSyndicalPage() {
         return publicUrlData.publicUrl;
     };
 
+    const saveBox = async (rowIndex: number, col: 'oj' | 'cr') => {
+        setIsSavingBox({ rowIndex, col });
+        const supabase = createClient();
+
+        try {
+            const { data: existingRows } = await supabase.from('conseil_syndical').select('*');
+            const row = rows[rowIndex];
+            const updatedRow: any = {
+                position: rowIndex,
+                oj_titre: row.oj.titre,
+                oj_date: row.oj.date,
+                oj_type: row.oj.type,
+                cr_titre: row.cr.titre,
+                cr_date: row.cr.date,
+                cr_type: row.cr.type,
+            };
+
+            // Only process file uploads for the column being saved to save time
+            if (col === 'oj') {
+                if (row.oj.type === 'file' && row.oj.fileToUpload) {
+                    const url = await handleFileUpload(row.oj.fileToUpload);
+                    if (url) updatedRow.oj_url = url;
+                } else if (row.oj.type === 'link') {
+                    updatedRow.oj_url = row.oj.url;
+                } else if (row.oj.type === 'empty') {
+                    updatedRow.oj_url = "";
+                } else {
+                    updatedRow.oj_url = row.oj.url;
+                }
+                updatedRow.cr_url = row.cr.url; // Keep existing
+            } else {
+                if (row.cr.type === 'file' && row.cr.fileToUpload) {
+                    const url = await handleFileUpload(row.cr.fileToUpload);
+                    if (url) updatedRow.cr_url = url;
+                } else if (row.cr.type === 'link') {
+                    updatedRow.cr_url = row.cr.url;
+                } else if (row.cr.type === 'empty') {
+                    updatedRow.cr_url = "";
+                } else {
+                    updatedRow.cr_url = row.cr.url;
+                }
+                updatedRow.oj_url = row.oj.url; // Keep existing
+            }
+
+            let response;
+            if (row.id.startsWith('temp-')) {
+                response = await supabase.from('conseil_syndical').insert([updatedRow]).select().single();
+                if (response.error) throw response.error;
+
+                if (user && response.data) {
+                    await logAction('Création', user.id, `${user.prenom} ${user.nom}`, user.email, `A créé un document CS`, null, response.data);
+                }
+            } else {
+                const originalRow = existingRows?.find((r: any) => r.id === row.id) || null;
+                response = await supabase.from('conseil_syndical').update(updatedRow).eq('id', row.id).select().single();
+                if (response.error) throw response.error;
+
+                if (user && response.data) {
+                    await logAction('Modification', user.id, `${user.prenom} ${user.nom}`, user.email, `A modifié le document CS`, originalRow, response.data);
+                }
+            }
+            toast({ title: "Succès", description: "Le document a été sauvegardé avec succès." });
+            fetchRows();
+        } catch (err: any) {
+            toast({ title: "Erreur", description: err.message, variant: "destructive" });
+        } finally {
+            setIsSavingBox(null);
+        }
+    };
+
     const saveChanges = async () => {
         setIsSaving(true);
         const supabase = createClient();
 
         try {
-            const { data: existingRows } = await supabase.from('conseil_syndical').select('*');
-
             for (let i = 0; i < rows.length; i++) {
                 const row = rows[i];
                 const updatedRow: any = {
@@ -325,24 +416,12 @@ export default function AdminConseilSyndicalPage() {
                 }
 
                 if (row.id.startsWith('temp-')) {
-                    const response = await supabase.from('conseil_syndical').insert([updatedRow]).select().single();
-                    if (user && !response.error && response.data) {
-                        await logAction('Création', user.id, `${user.prenom} ${user.nom}`, user.email, `A créé une ligne de document CS`, null, response.data);
-                    }
+                    await supabase.from('conseil_syndical').insert([updatedRow]);
                 } else {
-                    const originalRow = existingRows?.find(r => r.id === row.id) || null;
-                    const response = await supabase.from('conseil_syndical').update(updatedRow).eq('id', row.id).select().single();
-                    if (user && !response.error && response.data) {
-                        // Check if something really changed before logging (ignoring updated_at)
-                        const originalToCompare = { ...originalRow, updated_at: null };
-                        const newToCompare = { ...response.data, updated_at: null };
-                        if (JSON.stringify(originalToCompare) !== JSON.stringify(newToCompare)) {
-                            await logAction('Modification', user.id, `${user.prenom} ${user.nom}`, user.email, `A modifié les documents CS`, originalRow, response.data);
-                        }
-                    }
+                    await supabase.from('conseil_syndical').update(updatedRow).eq('id', row.id);
                 }
             }
-            toast({ title: "Succès", description: "Les documents du conseil syndical ont été mis à jour." });
+            toast({ title: "Succès", description: "L'ordre des documents a été mis à jour." });
             fetchRows(); // reload new DB ids
         } catch (err: any) {
             toast({ title: "Erreur", description: err.message, variant: "destructive" });
@@ -388,15 +467,31 @@ export default function AdminConseilSyndicalPage() {
                                     <ArrowDown className="w-4 h-4" />
                                 </Button>
                                 <div className="w-px h-6 bg-border mx-1"></div>
-                                <Button size="sm" variant="destructive" className="h-8 w-8 p-0 rounded-full" onClick={() => removeRow(idx, row.id)} title="Supprimer la ligne entière text-danger">
+                                <Button size="sm" variant="destructive" className="h-8 w-8 p-0 rounded-full" onClick={() => confirmRemoveRow(idx, row.id)} title="Supprimer la ligne entière text-danger">
                                     <Trash2 className="w-4 h-4" />
                                 </Button>
                             </div>
                             <div className="font-bold text-lg mb-4 text-foreground opacity-80">Ligne #{idx + 1}</div>
 
                             <div className="flex flex-col md:flex-row gap-6">
-                                <BoxEditor row={row} rowIndex={idx} col="oj" label="Ordre du jour (Colonne Gauche)" handleBoxChange={handleBoxChange} />
-                                <BoxEditor row={row} rowIndex={idx} col="cr" label="Compte rendu (Colonne Droite)" handleBoxChange={handleBoxChange} />
+                                <BoxEditor
+                                    row={row}
+                                    rowIndex={idx}
+                                    col="oj"
+                                    label="Ordre du jour (Colonne Gauche)"
+                                    handleBoxChange={handleBoxChange}
+                                    saveBox={saveBox}
+                                    isSavingBox={isSavingBox?.rowIndex === idx && isSavingBox?.col === 'oj'}
+                                />
+                                <BoxEditor
+                                    row={row}
+                                    rowIndex={idx}
+                                    col="cr"
+                                    label="Compte rendu (Colonne Droite)"
+                                    handleBoxChange={handleBoxChange}
+                                    saveBox={saveBox}
+                                    isSavingBox={isSavingBox?.rowIndex === idx && isSavingBox?.col === 'cr'}
+                                />
                             </div>
                         </div>
                     ))}
@@ -408,6 +503,25 @@ export default function AdminConseilSyndicalPage() {
                     )}
                 </CardContent>
             </Card>
+
+            <Dialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Confirmer la suppression</DialogTitle>
+                        <DialogDescription>
+                            Voulez-vous vraiment supprimer la ligne #{deleteConfirm ? deleteConfirm.index + 1 : ''} (Ordre du jour et Compte rendu) du Conseil Syndical ?
+                            Cette action est irréversible.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="mt-4">
+                        <Button variant="outline" onClick={() => setDeleteConfirm(null)} disabled={isSaving}>Annuler</Button>
+                        <Button variant="destructive" onClick={executeDelete} disabled={isSaving}>
+                            {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                            Supprimer définitivement
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

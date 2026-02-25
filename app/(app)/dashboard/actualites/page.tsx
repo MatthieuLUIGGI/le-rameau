@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../../../components/ui/dialog";
 import { logAction } from "../../../../lib/logger";
+import { deleteNotificationByEntity } from "../../../../lib/notifications";
 
 interface Actualite {
     id: string;
@@ -76,6 +77,7 @@ export default function AdminActualitesPage() {
             if (user) {
                 await logAction('Suppression', user.id, `${user.prenom} ${user.nom}`, user.email, `A supprimé l'actualité: ${deleteConfirm.name}`, itemToDelete || null, null);
             }
+            await deleteNotificationByEntity(deleteConfirm.id);
             toast({ title: "Succès", description: "L'actualité a été supprimée." });
             setActualites(prev => prev.filter(a => a.id !== deleteConfirm.id));
         }

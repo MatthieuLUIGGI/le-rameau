@@ -6,12 +6,13 @@ import { useUser } from "../../../../lib/hooks/useUser";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../../components/ui/card";
 import { Button } from "../../../../components/ui/button";
 import { Input } from "../../../../components/ui/input";
-import { Loader2, Plus, Trash2, UploadCloud, Link as LinkIcon, FileCheck, ArrowUp, ArrowDown, ArrowLeft } from "lucide-react";
+import { Loader2, Plus, Trash2, UploadCloud, Link as LinkIcon, FileCheck, ArrowUp, ArrowDown, ArrowLeft, Save } from "lucide-react";
 import { toast } from "../../../../hooks/use-toast";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { logAction } from "../../../../lib/logger";
-import { createNotification } from "../../../../lib/notifications";
+import { createNotification, deleteNotificationByEntity } from "../../../../lib/notifications";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../../../components/ui/dialog";
 
 interface DocumentBox {
     titre: string;
@@ -29,7 +30,7 @@ interface AssembleeRow {
 }
 
 // Extraction du composant pour éviter la perte de focus lors du re-rendu
-const BoxEditor = ({ row, rowIndex, col, label, handleBoxChange }: { row: AssembleeRow, rowIndex: number, col: 'pv' | 'rapport', label: string, handleBoxChange: (rowIndex: number, col: 'pv' | 'rapport', field: keyof DocumentBox, value: any) => void }) => {
+const BoxEditor = ({ row, rowIndex, col, label, handleBoxChange, saveBox, isSavingBox }: { row: AssembleeRow, rowIndex: number, col: 'pv' | 'rapport', label: string, handleBoxChange: (rowIndex: number, col: 'pv' | 'rapport', field: keyof DocumentBox, value: any) => void, saveBox: (rowIndex: number, col: 'pv' | 'rapport') => void, isSavingBox: boolean }) => {
     const box = row[col];
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -50,7 +51,18 @@ const BoxEditor = ({ row, rowIndex, col, label, handleBoxChange }: { row: Assemb
 
     return (
         <div className="flex-1 space-y-3 bg-muted/20 p-4 border border-border/50 rounded-xl relative">
-            <div className="font-semibold text-primary mb-2 border-b border-border/50 pb-2">{label}</div>
+            <div className="flex justify-between items-center mb-2 border-b border-border/50 pb-2">
+                <div className="font-semibold text-primary">{label}</div>
+                <Button
+                    size="sm"
+                    onClick={() => saveBox(rowIndex, col)}
+                    disabled={isSavingBox}
+                    className="h-7 text-xs px-2"
+                >
+                    {isSavingBox ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Save className="w-3 h-3 mr-1" />}
+                    Sauvegarder
+                </Button>
+            </div>
 
             <div className="space-y-1">
                 <label className="text-xs font-semibold text-muted-foreground">Titre de l'événement</label>
@@ -162,6 +174,8 @@ export default function AdminAssembleeGeneralePage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [rows, setRows] = useState<AssembleeRow[]>([]);
+    const [isSavingBox, setIsSavingBox] = useState<{ rowIndex: number, col: string } | null>(null);
+    const [deleteConfirm, setDeleteConfirm] = useState<{ index: number, id: string } | null>(null);
 
     useEffect(() => {
         if (!userLoading && user && user.role !== 'ag') {
@@ -213,9 +227,14 @@ export default function AdminAssembleeGeneralePage() {
         setRows(prev => [createEmptyRow(Date.now()), ...prev]);
     };
 
-    const removeRow = async (rowIndex: number, rowId: string) => {
-        const confirmDelete = window.confirm("Êtes-vous sûr de vouloir supprimer cette ligne complète ?");
-        if (!confirmDelete) return;
+    const confirmRemoveRow = (rowIndex: number, rowId: string) => {
+        setDeleteConfirm({ index: rowIndex, id: rowId });
+    };
+
+    const executeDelete = async () => {
+        if (!deleteConfirm) return;
+        setIsSaving(true);
+        const { index: rowIndex, id: rowId } = deleteConfirm;
 
         if (!rowId.startsWith('temp-')) {
             const supabase = createClient();
@@ -225,8 +244,11 @@ export default function AdminAssembleeGeneralePage() {
             if (user) {
                 await logAction('Suppression', user.id, `${user.prenom} ${user.nom}`, user.email, `A supprimé une ligne de document du Assemblée Générale`, rowToDelete || null, null);
             }
+            await deleteNotificationByEntity(rowId);
         }
         setRows(prev => prev.filter((_, idx) => idx !== rowIndex));
+        setIsSaving(false);
+        setDeleteConfirm(null);
     };
 
     const moveRowUp = (index: number) => {
@@ -282,13 +304,83 @@ export default function AdminAssembleeGeneralePage() {
         return publicUrlData.publicUrl;
     };
 
+    const saveBox = async (rowIndex: number, col: 'pv' | 'rapport') => {
+        setIsSavingBox({ rowIndex, col });
+        const supabase = createClient();
+
+        try {
+            const { data: existingRows } = await supabase.from('assemblee_generale').select('*');
+            const row = rows[rowIndex];
+            const updatedRow: any = {
+                position: rowIndex,
+                pv_titre: row.pv.titre,
+                pv_date: row.pv.date,
+                pv_type: row.pv.type,
+                rapport_titre: row.rapport.titre,
+                rapport_date: row.rapport.date,
+                rapport_type: row.rapport.type,
+            };
+
+            // Only process file uploads for the column being saved to save time
+            if (col === 'pv') {
+                if (row.pv.type === 'file' && row.pv.fileToUpload) {
+                    const url = await handleFileUpload(row.pv.fileToUpload);
+                    if (url) updatedRow.pv_url = url;
+                } else if (row.pv.type === 'link') {
+                    updatedRow.pv_url = row.pv.url;
+                } else if (row.pv.type === 'empty') {
+                    updatedRow.pv_url = "";
+                } else {
+                    updatedRow.pv_url = row.pv.url;
+                }
+                updatedRow.rapport_url = row.rapport.url; // Keep existing
+            } else {
+                if (row.rapport.type === 'file' && row.rapport.fileToUpload) {
+                    const url = await handleFileUpload(row.rapport.fileToUpload);
+                    if (url) updatedRow.rapport_url = url;
+                } else if (row.rapport.type === 'link') {
+                    updatedRow.rapport_url = row.rapport.url;
+                } else if (row.rapport.type === 'empty') {
+                    updatedRow.rapport_url = "";
+                } else {
+                    updatedRow.rapport_url = row.rapport.url;
+                }
+                updatedRow.pv_url = row.pv.url; // Keep existing
+            }
+
+            let response;
+            if (row.id.startsWith('temp-')) {
+                response = await supabase.from('assemblee_generale').insert([updatedRow]).select().single();
+                if (response.error) throw response.error;
+
+                if (user && response.data) {
+                    await logAction('Création', user.id, `${user.prenom} ${user.nom}`, user.email, `A créé un document AG`, null, response.data);
+                    await createNotification("Nouveau document AG", `Le document "${row[col].titre || (col === 'pv' ? 'Procès-Verbal' : 'Rapport')}" a été ajouté.`, "/ag", "ag", response.data.id);
+                }
+            } else {
+                const originalRow = existingRows?.find((r: any) => r.id === row.id) || null;
+                response = await supabase.from('assemblee_generale').update(updatedRow).eq('id', row.id).select().single();
+                if (response.error) throw response.error;
+
+                if (user && response.data) {
+                    await logAction('Modification', user.id, `${user.prenom} ${user.nom}`, user.email, `A modifié le document AG`, originalRow, response.data);
+                    await createNotification("Document AG mis à jour", `Le document "${row[col].titre || (col === 'pv' ? 'Procès-Verbal' : 'Rapport')}" a été mis à jour.`, "/ag", "ag", response.data.id);
+                }
+            }
+            toast({ title: "Succès", description: "Le document a été sauvegardé avec succès." });
+            fetchRows();
+        } catch (err: any) {
+            toast({ title: "Erreur", description: err.message, variant: "destructive" });
+        } finally {
+            setIsSavingBox(null);
+        }
+    };
+
     const saveChanges = async () => {
         setIsSaving(true);
         const supabase = createClient();
 
         try {
-            const { data: existingRows } = await supabase.from('assemblee_generale').select('*');
-
             for (let i = 0; i < rows.length; i++) {
                 const row = rows[i];
                 const updatedRow: any = {
@@ -326,26 +418,12 @@ export default function AdminAssembleeGeneralePage() {
                 }
 
                 if (row.id.startsWith('temp-')) {
-                    const response = await supabase.from('assemblee_generale').insert([updatedRow]).select().single();
-                    if (user && !response.error && response.data) {
-                        await logAction('Création', user.id, `${user.prenom} ${user.nom}`, user.email, `A créé une ligne de document AG`, null, response.data);
-                        await createNotification("Nouveau document AG", `Un nouveau document a été ajouté.`, "/ag", "ag");
-                    }
+                    await supabase.from('assemblee_generale').insert([updatedRow]);
                 } else {
-                    const originalRow = existingRows?.find(r => r.id === row.id) || null;
-                    const response = await supabase.from('assemblee_generale').update(updatedRow).eq('id', row.id).select().single();
-                    if (user && !response.error && response.data) {
-                        // Check if something really changed before logging (ignoring updated_at)
-                        const originalToCompare = { ...originalRow, updated_at: null };
-                        const newToCompare = { ...response.data, updated_at: null };
-                        if (JSON.stringify(originalToCompare) !== JSON.stringify(newToCompare)) {
-                            await logAction('Modification', user.id, `${user.prenom} ${user.nom}`, user.email, `A modifié les documents AG`, originalRow, response.data);
-                            await createNotification("Document AG mis à jour", `Un document AG a été modifié.`, "/ag", "ag");
-                        }
-                    }
+                    await supabase.from('assemblee_generale').update(updatedRow).eq('id', row.id);
                 }
             }
-            toast({ title: "Succès", description: "Les documents de l'assemblée générale ont été mis à jour." });
+            toast({ title: "Succès", description: "L'ordre des documents a été mis à jour." });
             fetchRows(); // reload new DB ids
         } catch (err: any) {
             toast({ title: "Erreur", description: err.message, variant: "destructive" });
@@ -391,15 +469,31 @@ export default function AdminAssembleeGeneralePage() {
                                     <ArrowDown className="w-4 h-4" />
                                 </Button>
                                 <div className="w-px h-6 bg-border mx-1"></div>
-                                <Button size="sm" variant="destructive" className="h-8 w-8 p-0 rounded-full" onClick={() => removeRow(idx, row.id)} title="Supprimer la ligne entière text-danger">
+                                <Button size="sm" variant="destructive" className="h-8 w-8 p-0 rounded-full" onClick={() => confirmRemoveRow(idx, row.id)} title="Supprimer la ligne entière text-danger">
                                     <Trash2 className="w-4 h-4" />
                                 </Button>
                             </div>
                             <div className="font-bold text-lg mb-4 text-foreground opacity-80">Ligne #{idx + 1}</div>
 
                             <div className="flex flex-col md:flex-row gap-6">
-                                <BoxEditor row={row} rowIndex={idx} col="pv" label="Procès-Verbal (PV)" handleBoxChange={handleBoxChange} />
-                                <BoxEditor row={row} rowIndex={idx} col="rapport" label="Rapport d'activité du CS" handleBoxChange={handleBoxChange} />
+                                <BoxEditor
+                                    row={row}
+                                    rowIndex={idx}
+                                    col="pv"
+                                    label="Procès-Verbal (PV)"
+                                    handleBoxChange={handleBoxChange}
+                                    saveBox={saveBox}
+                                    isSavingBox={isSavingBox?.rowIndex === idx && isSavingBox?.col === 'pv'}
+                                />
+                                <BoxEditor
+                                    row={row}
+                                    rowIndex={idx}
+                                    col="rapport"
+                                    label="Rapport d'activité du CS"
+                                    handleBoxChange={handleBoxChange}
+                                    saveBox={saveBox}
+                                    isSavingBox={isSavingBox?.rowIndex === idx && isSavingBox?.col === 'rapport'}
+                                />
                             </div>
                         </div>
                     ))}
@@ -411,6 +505,25 @@ export default function AdminAssembleeGeneralePage() {
                     )}
                 </CardContent>
             </Card>
+
+            <Dialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Confirmer la suppression</DialogTitle>
+                        <DialogDescription>
+                            Voulez-vous vraiment supprimer la ligne #{deleteConfirm ? deleteConfirm.index + 1 : ''} (PV et Rapport d'activité) de l'Assemblée Générale ?
+                            Cette action supprimera également les notifications associées.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="mt-4">
+                        <Button variant="outline" onClick={() => setDeleteConfirm(null)} disabled={isSaving}>Annuler</Button>
+                        <Button variant="destructive" onClick={executeDelete} disabled={isSaving}>
+                            {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                            Supprimer définitivement
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

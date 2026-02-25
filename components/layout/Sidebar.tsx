@@ -29,6 +29,7 @@ import { createClient } from "../../lib/supabase/client";
 import { toast } from "../../hooks/use-toast";
 import { DEMO_MODE } from "../../lib/demo-data";
 import { logAction } from "../../lib/logger";
+import { NotificationBell } from "./NotificationBell";
 
 const navigation = [
     { name: 'Accueil', href: '/accueil', icon: Home },
@@ -78,26 +79,31 @@ export function Sidebar() {
                     Le Rameau
                 </div>
 
-                <div className="mt-8 px-6 mb-8 flex items-center">
+                <div className="mt-8 px-6 mb-8 flex items-center justify-between gap-2 overflow-hidden">
                     {isLoading ? (
                         <div className="flex items-center space-x-3">
-                            <Skeleton className="h-10 w-10 rounded-full" />
+                            <Skeleton className="h-10 w-10 rounded-full flex-shrink-0" />
                             <div className="space-y-2">
-                                <Skeleton className="h-4 w-[100px]" />
-                                <Skeleton className="h-3 w-[60px]" />
+                                <Skeleton className="h-4 w-[80px]" />
+                                <Skeleton className="h-3 w-[50px]" />
                             </div>
                         </div>
                     ) : user ? (
-                        <div className="flex gap-3 items-center">
-                            <Avatar>
-                                <AvatarImage src={user.avatar_url || ''} />
-                                <AvatarFallback className="bg-primary/10 text-primary">
-                                    {user.prenom[0]}{user.nom[0]}
-                                </AvatarFallback>
-                            </Avatar>
-                            <div>
-                                <p className="text-sm font-medium text-primary">{user.prenom} {user.nom}</p>
-                                {user.appartement && <p className="text-xs text-muted-foreground">Apt. {user.appartement}</p>}
+                        <div className="flex items-center justify-between w-full">
+                            <div className="flex gap-3 items-center truncate pr-2">
+                                <Avatar className="flex-shrink-0">
+                                    <AvatarImage src={user.avatar_url || ''} />
+                                    <AvatarFallback className="bg-primary/10 text-primary">
+                                        {user.prenom[0]}{user.nom[0]}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div className="truncate">
+                                    <p className="text-sm font-medium text-primary truncate">{user.prenom} {user.nom}</p>
+                                    {user.appartement && <p className="text-xs text-muted-foreground">Apt. {user.appartement}</p>}
+                                </div>
+                            </div>
+                            <div className="flex-shrink-0 -mr-2">
+                                <NotificationBell />
                             </div>
                         </div>
                     ) : null}

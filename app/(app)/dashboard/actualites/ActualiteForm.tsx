@@ -81,12 +81,16 @@ export default function ActualiteForm({ initialData }: ActualiteFormProps) {
         };
 
         let error;
+        let recordId = initialData?.id;
+
         if (initialData?.id) {
-            const res = await supabase.from('actualites').update(payload).eq('id', initialData.id);
+            const res = await supabase.from('actualites').update(payload).eq('id', initialData.id).select('id').single();
             error = res.error;
+            if (res.data) recordId = res.data.id;
         } else {
-            const res = await supabase.from('actualites').insert([payload]);
+            const res = await supabase.from('actualites').insert([payload]).select('id').single();
             error = res.error;
+            if (res.data) recordId = res.data.id;
         }
 
         if (error) {
@@ -107,8 +111,9 @@ export default function ActualiteForm({ initialData }: ActualiteFormProps) {
             await createNotification(
                 initialData?.id ? "Actualité modifiée" : "Nouvelle actualité",
                 formData.titre,
-                "/actualites",
-                "actualite"
+                recordId ? `/actualites/${recordId}` : "/actualites",
+                "actualite",
+                recordId
             );
             toast({ title: "Succès", description: "L'actualité a bien été enregistrée." });
             router.push("/dashboard/actualites");
