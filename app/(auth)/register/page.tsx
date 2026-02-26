@@ -36,6 +36,26 @@ export default function RegisterPage() {
         },
     });
 
+    const passwordValue = form.watch("password") || "";
+
+    const strengthScore = (() => {
+        let score = 0;
+        if (!passwordValue) return 0;
+        if (passwordValue.length >= 8) score += 1;
+        if (/[A-Z]/.test(passwordValue)) score += 1;
+        if (/[a-z]/.test(passwordValue)) score += 1;
+        if (/[0-9]/.test(passwordValue)) score += 1;
+        if (/[^A-Za-z0-9]/.test(passwordValue)) score += 1;
+        return score;
+    })();
+
+    const getStrengthColor = (s: number) => {
+        if (s === 0) return "bg-transparent";
+        if (s <= 2) return "bg-destructive";
+        if (s <= 4) return "bg-amber-500";
+        return "bg-green-500";
+    };
+
     async function onSubmit(data: z.infer<typeof registerSchema>) {
         setIsLoading(true);
         try {
@@ -59,18 +79,33 @@ export default function RegisterPage() {
                 }
             });
 
-            if (signUpError) throw signUpError;
+            if (signUpError) {
+                if (signUpError.message === "User already registered" || signUpError.message.includes("already registered")) {
+                    router.push('/login?exists=true');
+                    return;
+                }
+                throw signUpError;
+            }
+
+            if (authData.user && authData.user.identities && authData.user.identities.length === 0) {
+                // Email est déjà utilisé et prévient l'énumération par email
+                router.push('/login?exists=true');
+                return;
+            }
 
             if (authData.user) {
                 await logAction('Création', authData.user.id, `${data.prenom} ${data.nom}`, data.email);
             }
 
-            toast({ title: "Inscription réussie", description: "Veuillez vérifier votre boîte mail pour confirmer votre compte." });
-            router.push('/login');
-        } catch (error) {
+            router.push('/login?registered=true');
+        } catch (error: any) {
+            if (error?.message === "User already registered" || error?.message?.includes("already registered")) {
+                router.push('/login?exists=true');
+                return;
+            }
             toast({
                 title: "Erreur d'inscription",
-                description: "Une erreur s'est produite.",
+                description: error?.message || "Une erreur s'est produite lors de la création de votre compte.",
                 variant: "destructive"
             });
         } finally {
@@ -122,7 +157,7 @@ export default function RegisterPage() {
                                     </FormItem>
                                 )} />
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <FormField control={form.control} name="password" render={({ field }) => (
                                         <FormItem>
                                             <Label>Mot de passe</Label>
@@ -130,6 +165,19 @@ export default function RegisterPage() {
                                                 <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground pointer-events-none" />
                                                 <FormControl><Input className="pl-10" type="password" placeholder="••••••••" {...field} /></FormControl>
                                             </div>
+                                            {passwordValue && (
+                                                <div className="mt-2 text-xs">
+                                                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden mb-1 flex">
+                                                        <div
+                                                            className={`h-full transition-all duration-300 ${getStrengthColor(strengthScore)}`}
+                                                            style={{ width: `${(strengthScore / 5) * 100}%` }}
+                                                        />
+                                                    </div>
+                                                    <p className={`text-[10px] leading-tight ${strengthScore === 5 ? 'text-green-600 font-semibold' : 'text-muted-foreground'}`}>
+                                                        8 caractères min, majuscule, minuscule, chiffre, et caractère spécial requis.
+                                                    </p>
+                                                </div>
+                                            )}
                                             <FormMessage />
                                         </FormItem>
                                     )} />

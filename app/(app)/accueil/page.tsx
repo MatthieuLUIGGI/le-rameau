@@ -33,7 +33,7 @@ export default function DashboardPage() {
                             Bonjour, {user?.prenom || "Résident"} 👋
                         </h1>
                     )}
-                    <p className="text-muted-foreground font-medium capitalize">
+                    <p className="text-blue-500 font-medium capitalize">
                         {format(today, "EEEE d MMMM yyyy", { locale: fr })}
                     </p>
                 </div>
@@ -67,7 +67,6 @@ export default function DashboardPage() {
             <div className="mt-8 relative z-10">
                 <div className="mb-6">
                     <h2 className="text-2xl font-bold mb-1">Accès rapides</h2>
-                    <p className="text-muted-foreground">Découvrez toutes les fonctionnalités de votre espace copropriété</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">

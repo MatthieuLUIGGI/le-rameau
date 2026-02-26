@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, Mail, Lock } from "lucide-react";
+import { Building2, Mail, Lock, MailCheck, UserCheck } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardHeader } from "../../../components/ui/card";
@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { loginSchema } from "../../../lib/validations";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "../../../lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { toast } from "../../../hooks/use-toast";
@@ -21,6 +21,19 @@ import { logAction } from "../../../lib/logger";
 export default function LoginPage() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
+    const [isRegistered, setIsRegistered] = useState(false);
+    const [isExisting, setIsExisting] = useState(false);
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            if (window.location.search.includes("registered=true")) {
+                setIsRegistered(true);
+            }
+            if (window.location.search.includes("exists=true")) {
+                setIsExisting(true);
+            }
+        }
+    }, []);
 
     const form = useForm<z.infer<typeof loginSchema>>({
         resolver: zodResolver(loginSchema),
@@ -73,6 +86,27 @@ export default function LoginPage() {
                     <h1 className="text-3xl font-bold text-primary text-center">Bon retour</h1>
                     <p className="text-muted-foreground text-center mt-2">Connectez-vous à votre espace résident</p>
                 </div>
+
+                {isRegistered && (
+                    <div className="mb-8 p-6 bg-blue-500/10 border-2 border-blue-500 rounded-xl text-center shadow-lg animate-in slide-in-from-top-4 duration-500">
+                        <MailCheck className="w-12 h-12 text-blue-500 mx-auto mb-3 animate-pulse" />
+                        <h2 className="text-xl font-extrabold text-blue-500 mb-2">Inscription réussie !</h2>
+                        <p className="text-blue-600/90 font-bold text-xl leading-snug">
+                            Veuillez vérifier votre boîte mail pour confirmer votre compte.
+                        </p>
+                        <p className="text-sm text-blue-600/80 mt-2 font-medium">Vous pourrez vous connecter juste après la confirmation.</p>
+                    </div>
+                )}
+                {isExisting && (
+                    <div className="mb-8 p-6 bg-amber-500/10 border-2 border-amber-500 rounded-xl text-center shadow-lg animate-in slide-in-from-top-4 duration-500">
+                        <UserCheck className="w-12 h-12 text-amber-500 mx-auto mb-3" />
+                        <h2 className="text-xl font-extrabold text-amber-600 mb-2">Compte déjà existant</h2>
+                        <p className="text-amber-700/90 font-bold text-lg leading-snug">
+                            Cette adresse email est déjà associée à un compte.
+                        </p>
+                        <p className="text-sm text-amber-700/80 mt-2 font-medium">Veuillez vous connecter avec vos identifiants ou réinitialiser votre mot de passe.</p>
+                    </div>
+                )}
 
                 <Card className="shadow-lg border-none">
                     <CardContent className="pt-6">
