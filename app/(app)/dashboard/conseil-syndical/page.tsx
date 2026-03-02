@@ -1,527 +1,240 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "../../../../lib/supabase/client";
 import { useUser } from "../../../../lib/hooks/useUser";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../../components/ui/card";
 import { Button } from "../../../../components/ui/button";
 import { Input } from "../../../../components/ui/input";
-import { Loader2, Plus, Trash2, UploadCloud, Link as LinkIcon, FileCheck, ArrowUp, ArrowDown, ArrowLeft, Save } from "lucide-react";
+import { Loader2, Plus, Trash2, GripVertical, FileCheck, UploadCloud, Link as LinkIcon, Save } from "lucide-react";
 import { toast } from "../../../../hooks/use-toast";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { logAction } from "../../../../lib/logger";
-import { deleteNotificationByEntity } from "../../../../lib/notifications";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../../../components/ui/dialog";
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
-interface DocumentBox {
+interface DocCard {
+    id: string;
     titre: string;
     date: string;
     type: 'empty' | 'file' | 'link';
     url: string;
-    fileToUpload?: File | null;
-}
-
-interface ConseilRow {
-    id: string; // uuid from db or temp
     position: number;
-    oj: DocumentBox;
-    cr: DocumentBox;
+    fileToUpload?: File | null;
+    isSaving?: boolean;
 }
 
-// Extraction du composant pour éviter la perte de focus lors du re-rendu
-const BoxEditor = ({ row, rowIndex, col, label, handleBoxChange, saveBox, isSavingBox }: { row: ConseilRow, rowIndex: number, col: 'oj' | 'cr', label: string, handleBoxChange: (rowIndex: number, col: 'oj' | 'cr', field: keyof DocumentBox, value: any) => void, saveBox: (rowIndex: number, col: 'oj' | 'cr') => void, isSavingBox: boolean }) => {
-    const box = row[col];
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-    };
-
-    const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (box.type !== 'file') return;
-
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            handleBoxChange(rowIndex, col, 'fileToUpload', e.dataTransfer.files[0]);
-        }
-    };
+function SortableItem({ id, item, updateItem, handleDelete, handleSave, handleFileDrop }: any) {
+    const { attributes, listeners, setNodeRef, transform, transition, setActivatorNodeRef, isDragging } = useSortable({ id });
+    const style = { transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 50 : 1, position: 'relative' as const };
 
     return (
-        <div className="flex-1 space-y-3 bg-muted/20 p-4 border border-border/50 rounded-xl relative">
-            <div className="flex justify-between items-center mb-2 border-b border-border/50 pb-2">
-                <div className="font-semibold text-primary">{label}</div>
-                <Button
-                    size="sm"
-                    onClick={() => saveBox(rowIndex, col)}
-                    disabled={isSavingBox}
-                    className="h-7 text-xs px-2"
-                >
-                    {isSavingBox ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Save className="w-3 h-3 mr-1" />}
-                    Sauvegarder
-                </Button>
-            </div>
-
-            <div className="space-y-1">
-                <label className="text-xs font-semibold text-muted-foreground">Titre de l'événement</label>
-                <Input
-                    placeholder="Ex: Assemblée du Q1..."
-                    value={box.titre}
-                    onChange={e => handleBoxChange(rowIndex, col, 'titre', e.target.value)}
-                    className="h-9"
-                />
-            </div>
-
-            <div className="space-y-1">
-                <label className="text-xs font-semibold text-muted-foreground">Date</label>
-                <Input
-                    type="date"
-                    value={box.date}
-                    onChange={e => handleBoxChange(rowIndex, col, 'date', e.target.value)}
-                    className="h-9"
-                />
-            </div>
-
-            <div className="space-y-1">
-                <label className="text-xs font-semibold text-muted-foreground">Type de contenu</label>
+        <div ref={setNodeRef} style={style} className={`bg-surface border shadow-sm rounded-xl p-4 flex flex-col gap-4 ${isDragging ? 'opacity-50 shadow-xl border-primary' : ''}`}>
+            <div className="flex justify-between items-center border-b border-border/50 pb-2">
+                <div ref={setActivatorNodeRef} {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing hover:bg-muted p-1.5 rounded-md transition-colors">
+                    <GripVertical className="h-5 w-5 text-muted-foreground" />
+                </div>
                 <div className="flex gap-2">
-                    <Button
-                        type="button"
-                        size="sm"
-                        variant={box.type === 'file' ? 'default' : 'outline'}
-                        onClick={() => handleBoxChange(rowIndex, col, 'type', 'file')}
-                        className="flex-1 h-8 text-xs"
-                    >
-                        <UploadCloud className="w-3 h-3 mr-1" /> Fichier
+                    <Button size="sm" variant="outline" onClick={() => handleSave(item)} disabled={item.isSaving} className="h-8">
+                        {item.isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-1" />} Enregistrer
                     </Button>
-                    <Button
-                        type="button"
-                        size="sm"
-                        variant={box.type === 'link' ? 'default' : 'outline'}
-                        onClick={() => handleBoxChange(rowIndex, col, 'type', 'link')}
-                        className="flex-1 h-8 text-xs"
-                    >
-                        <LinkIcon className="w-3 h-3 mr-1" /> Lien
-                    </Button>
-                    <Button
-                        type="button"
-                        size="sm"
-                        variant={box.type === 'empty' ? 'destructive' : 'outline'}
-                        onClick={() => handleBoxChange(rowIndex, col, 'type', 'empty')}
-                        className="flex-none px-2 h-8 text-xs"
-                        title="Vider la case"
-                    >
-                        Vide
+                    <Button size="icon" variant="destructive" onClick={() => handleDelete(item.id)} className="h-8 w-8 hover:bg-red-600">
+                        <Trash2 className="w-4 h-4" />
                     </Button>
                 </div>
             </div>
 
-            {box.type === 'link' && (
-                <div className="space-y-1 mt-2">
-                    <label className="text-xs font-semibold text-muted-foreground">URL du document</label>
-                    <Input
-                        placeholder="https://..."
-                        value={box.url}
-                        onChange={e => handleBoxChange(rowIndex, col, 'url', e.target.value)}
-                        className="h-9"
-                    />
-                </div>
-            )}
+            <div className="space-y-3 flex-1 flex flex-col">
+                <Input placeholder="Titre de la case..." value={item.titre} onChange={e => updateItem(id, 'titre', e.target.value)} className="font-semibold text-lg" />
+                <Input type="date" value={item.date} onChange={e => updateItem(id, 'date', e.target.value)} />
 
-            {box.type === 'file' && (
                 <div
-                    className="border-2 border-dashed border-border/70 hover:border-primary/50 transition-colors rounded-lg p-4 mt-2 text-center flex flex-col items-center justify-center cursor-pointer bg-background"
-                    onClick={() => fileInputRef.current?.click()}
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
+                    className={`relative border-2 border-dashed rounded-lg p-3 text-center transition-colors flex flex-col items-center justify-center min-h-[5rem] overflow-hidden ${item.type === 'file' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}
+                    onDragOver={e => e.preventDefault()}
+                    onDrop={e => {
+                        e.preventDefault();
+                        if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFileDrop(id, e.dataTransfer.files[0]);
+                    }}
                 >
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        className="hidden"
-                        onChange={e => {
-                            if (e.target.files && e.target.files[0]) {
-                                handleBoxChange(rowIndex, col, 'fileToUpload', e.target.files[0]);
-                            }
-                        }}
-                    />
-                    {box.fileToUpload ? (
+                    {item.fileToUpload ? (
                         <div className="text-sm font-medium text-green-600 flex flex-col items-center gap-1">
-                            <FileCheck className="w-5 h-5" />
-                            <span className="truncate w-40">{box.fileToUpload.name}</span>
+                            <FileCheck className="w-6 h-6" /> <span className="line-clamp-1 break-all px-2">{item.fileToUpload.name}</span>
                         </div>
-                    ) : box.url ? (
+                    ) : item.type === 'file' && item.url ? (
                         <div className="text-sm font-medium text-blue-500 flex flex-col items-center gap-1">
-                            <FileCheck className="w-5 h-5" />
-                            <span>Fichier enregistré (cliquez pour remplacer)</span>
+                            <FileCheck className="w-6 h-6" /> <span>Fichier enregistré en ligne</span>
                         </div>
                     ) : (
                         <div className="text-xs text-muted-foreground flex flex-col items-center gap-1">
-                            <UploadCloud className="w-5 h-5" />
-                            <span>Glissez un fichier ou cliquez ici</span>
+                            <UploadCloud className="w-6 h-6 mb-1 opacity-50" />
+                            <span>Glissez un PDF / Fichier</span>
                         </div>
                     )}
+                    <input type="file" className="absolute w-full h-full opacity-0 cursor-pointer inset-0" onChange={e => e.target.files && handleFileDrop(id, e.target.files[0])} />
                 </div>
-            )}
+
+                <div className="relative mt-auto pt-2">
+                    <div className="absolute inset-x-0 -top-2 flex justify-center">
+                        <span className="bg-surface px-2 text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Ou</span>
+                    </div>
+                    <LinkIcon className="absolute left-3 top-1/2 translate-y-[2px] w-4 h-4 text-muted-foreground" />
+                    <Input placeholder="Coller un lien URL..." className="pl-9 text-sm h-9" value={item.type === 'link' ? item.url : ''} onChange={e => updateItem(id, 'url', e.target.value)} />
+                </div>
+            </div>
         </div>
     );
-};
+}
 
 export default function AdminConseilSyndicalPage() {
     const { user, isLoading: userLoading } = useUser();
     const [isLoading, setIsLoading] = useState(true);
-    const [isSaving, setIsSaving] = useState(false);
-    const [rows, setRows] = useState<ConseilRow[]>([]);
-    const [isSavingBox, setIsSavingBox] = useState<{ rowIndex: number, col: string } | null>(null);
-    const [deleteConfirm, setDeleteConfirm] = useState<{ index: number, id: string } | null>(null);
+    const [cards, setCards] = useState<DocCard[]>([]);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    );
 
     useEffect(() => {
-        if (!userLoading && user && user.role !== 'ag') {
-            redirect("/accueil");
-        }
+        if (!userLoading && user && user.role !== 'admin' && user.role !== 'conseil' && user.role !== 'super_admin') redirect("/accueil");
     }, [user, userLoading]);
 
     useEffect(() => {
-        if (!userLoading && user?.role === 'ag') {
-            fetchRows();
-        }
+        if (!userLoading && (user?.role === 'admin' || user?.role === 'conseil' || user?.role === 'super_admin')) fetchCards();
     }, [user, userLoading]);
 
-    const fetchRows = async () => {
+    const fetchCards = async () => {
         const supabase = createClient();
         const { data, error } = await supabase.from('conseil_syndical').select('*').order('position', { ascending: true });
-
-        if (error) {
-            toast({ title: "Erreur", description: "Impossible de charger les documents.", variant: "destructive" });
-        } else if (data && data.length > 0) {
-            setRows(data.map(d => ({
-                id: d.id,
-                position: d.position,
-                oj: { titre: d.oj_titre || '', date: d.oj_date || '', type: d.oj_type || 'empty', url: d.oj_url || '' },
-                cr: { titre: d.cr_titre || '', date: d.cr_date || '', type: d.cr_type || 'empty', url: d.cr_url || '' }
-            })));
-        } else {
-            // Initialisation avec 3 lignes par défaut si rien n'existe
-            setRows([
-                createEmptyRow(0),
-                createEmptyRow(1),
-                createEmptyRow(2),
-            ]);
+        if (!error && data) {
+            setCards(data.map(d => ({ ...d, fileToUpload: null, isSaving: false })));
         }
         setIsLoading(false);
     };
 
-    const createEmptyRow = (pos: number): ConseilRow => {
-        return {
-            id: `temp-${Date.now()}-${pos}`,
-            position: pos,
-            oj: { titre: "", date: "", type: "empty", url: "" },
-            cr: { titre: "", date: "", type: "empty", url: "" }
-        };
-    };
-
-    const addRow = () => {
-        // Ajouter en haut de la liste
-        setRows(prev => [createEmptyRow(Date.now()), ...prev]);
-    };
-
-    const confirmRemoveRow = (rowIndex: number, rowId: string) => {
-        setDeleteConfirm({ index: rowIndex, id: rowId });
-    };
-
-    const executeDelete = async () => {
-        if (!deleteConfirm) return;
-        setIsSaving(true);
-        const { index: rowIndex, id: rowId } = deleteConfirm;
-
-        if (!rowId.startsWith('temp-')) {
-            const supabase = createClient();
-            const { data: rowToDelete } = await supabase.from('conseil_syndical').select('*').eq('id', rowId).single();
-
-            await supabase.from('conseil_syndical').delete().eq('id', rowId);
-            if (user) {
-                await logAction('Suppression', user.id, `${user.prenom} ${user.nom}`, user.email, `A supprimé une ligne de document du Conseil Syndical`, rowToDelete || null, null);
-            }
-            await deleteNotificationByEntity(rowId);
+    const handleDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (over && active.id !== over.id) {
+            setCards((items) => {
+                const oldIndex = items.findIndex(i => i.id === active.id);
+                const newIndex = items.findIndex(i => i.id === over.id);
+                const newOrder = arrayMove(items, oldIndex, newIndex);
+                saveOrder(newOrder); // trigger async save
+                return newOrder.map((item, idx) => ({ ...item, position: idx }));
+            });
         }
-        setRows(prev => prev.filter((_, idx) => idx !== rowIndex));
-        setIsSaving(false);
-        setDeleteConfirm(null);
     };
 
-    const moveRowUp = (index: number) => {
-        if (index === 0) return;
-        setRows(prev => {
-            const newRows = [...prev];
-            const temp = newRows[index - 1];
-            newRows[index - 1] = newRows[index];
-            newRows[index] = temp;
-            return newRows;
-        });
-    };
-
-    const moveRowDown = (index: number) => {
-        if (index === rows.length - 1) return;
-        setRows(prev => {
-            const newRows = [...prev];
-            const temp = newRows[index + 1];
-            newRows[index + 1] = newRows[index];
-            newRows[index] = temp;
-            return newRows;
-        });
-    };
-
-    const handleBoxChange = (rowIndex: number, col: 'oj' | 'cr', field: keyof DocumentBox, value: any) => {
-        setRows(prev => {
-            const newRows = [...prev];
-            newRows[rowIndex][col] = { ...newRows[rowIndex][col], [field]: value };
-
-            // Si le type change vers empty ou link, on vire le fichier potentiel
-            if (field === 'type' && value !== 'file') {
-                newRows[rowIndex][col].fileToUpload = null;
-            }
-            return newRows;
-        });
-    };
-
-    const handleFileUpload = async (file: File): Promise<string | null> => {
+    const saveOrder = async (newOrder: DocCard[]) => {
         const supabase = createClient();
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const filePath = `documents/${fileName}`;
-
-        const { error: uploadError, data } = await supabase.storage.from('conseil_docs').upload(filePath, file);
-
-        if (uploadError) {
-            console.error("Upload error:", uploadError);
-            toast({ title: "Erreur", description: "Le téléversement du fichier a échoué: " + uploadError.message, variant: "destructive" });
-            return null;
-        }
-
-        const { data: publicUrlData } = supabase.storage.from('conseil_docs').getPublicUrl(data.path);
-        return publicUrlData.publicUrl;
+        const updates = newOrder.map((item, idx) => ({ id: item.id, position: idx }));
+        await supabase.from('conseil_syndical').upsert(updates);
+        if (user) await logAction('Modification', user.id, `${user.prenom} ${user.nom}`, user.email, 'Réorganisation CS');
     };
 
-    const saveBox = async (rowIndex: number, col: 'oj' | 'cr') => {
-        setIsSavingBox({ rowIndex, col });
+    const addCard = async () => {
+        const supabase = createClient();
+        const newPos = cards.length;
+        const { data, error } = await supabase.from('conseil_syndical').insert([{ titre: '', date: '', type: 'empty', url: '', position: newPos }]).select().single();
+        if (data) setCards([...cards, { ...data, fileToUpload: null, isSaving: false }]);
+        if (user) await logAction('Création', user.id, `${user.prenom} ${user.nom}`, user.email, 'Ajout case CS');
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm("Voulez-vous vraiment supprimer cette case ?")) return;
+        const supabase = createClient();
+        await supabase.from('conseil_syndical').delete().eq('id', id);
+        setCards(cards.filter(c => c.id !== id));
+        if (user) await logAction('Suppression', user.id, `${user.prenom} ${user.nom}`, user.email, 'Suppression case CS');
+    };
+
+    const updateItem = (id: string, field: string, value: any) => {
+        setCards(cards.map(c => {
+            if (c.id !== id) return c;
+            const updated = { ...c, [field]: value };
+            if (field === 'url' && value.trim().length > 0) updated.type = 'link';
+            else if (field === 'url' && value.trim().length === 0 && !c.fileToUpload) updated.type = 'empty';
+            return updated;
+        }));
+    };
+
+    const handleFileDrop = (id: string, file: File) => {
+        setCards(cards.map(c => c.id === id ? { ...c, fileToUpload: file, type: 'file', url: '' } : c));
+    };
+
+    const handleSave = async (card: DocCard) => {
+        setCards(cards.map(c => c.id === card.id ? { ...c, isSaving: true } : c));
+        let urlTarget = card.url;
         const supabase = createClient();
 
-        try {
-            const { data: existingRows } = await supabase.from('conseil_syndical').select('*');
-            const row = rows[rowIndex];
-            const updatedRow: any = {
-                position: rowIndex,
-                oj_titre: row.oj.titre,
-                oj_date: row.oj.date,
-                oj_type: row.oj.type,
-                cr_titre: row.cr.titre,
-                cr_date: row.cr.date,
-                cr_type: row.cr.type,
-            };
-
-            // Only process file uploads for the column being saved to save time
-            if (col === 'oj') {
-                if (row.oj.type === 'file' && row.oj.fileToUpload) {
-                    const url = await handleFileUpload(row.oj.fileToUpload);
-                    if (url) updatedRow.oj_url = url;
-                } else if (row.oj.type === 'link') {
-                    updatedRow.oj_url = row.oj.url;
-                } else if (row.oj.type === 'empty') {
-                    updatedRow.oj_url = "";
-                } else {
-                    updatedRow.oj_url = row.oj.url;
-                }
-                updatedRow.cr_url = row.cr.url; // Keep existing
-            } else {
-                if (row.cr.type === 'file' && row.cr.fileToUpload) {
-                    const url = await handleFileUpload(row.cr.fileToUpload);
-                    if (url) updatedRow.cr_url = url;
-                } else if (row.cr.type === 'link') {
-                    updatedRow.cr_url = row.cr.url;
-                } else if (row.cr.type === 'empty') {
-                    updatedRow.cr_url = "";
-                } else {
-                    updatedRow.cr_url = row.cr.url;
-                }
-                updatedRow.oj_url = row.oj.url; // Keep existing
+        if (card.fileToUpload) {
+            try {
+                // Read as base64 instead of storage for demo logic compatibility
+                const buffer = await card.fileToUpload.arrayBuffer();
+                const base64 = Buffer.from(buffer).toString('base64');
+                const contentType = card.fileToUpload.type;
+                urlTarget = `data:${contentType};base64,${base64}`;
+            } catch (err) {
+                toast({ title: "Erreur d'attachement", description: "Le fichier n'a pas pu être traité." });
             }
+        }
 
-            let response;
-            if (row.id.startsWith('temp-')) {
-                response = await supabase.from('conseil_syndical').insert([updatedRow]).select().single();
-                if (response.error) throw response.error;
+        const { error } = await supabase.from('conseil_syndical').update({
+            titre: card.titre,
+            date: card.date,
+            type: card.type,
+            url: urlTarget
+        }).eq('id', card.id);
 
-                if (user && response.data) {
-                    await logAction('Création', user.id, `${user.prenom} ${user.nom}`, user.email, `A créé un document CS`, null, response.data);
-                }
-            } else {
-                const originalRow = existingRows?.find((r: any) => r.id === row.id) || null;
-                response = await supabase.from('conseil_syndical').update(updatedRow).eq('id', row.id).select().single();
-                if (response.error) throw response.error;
-
-                if (user && response.data) {
-                    await logAction('Modification', user.id, `${user.prenom} ${user.nom}`, user.email, `A modifié le document CS`, originalRow, response.data);
-                }
-            }
-            toast({ title: "Succès", description: "Le document a été sauvegardé avec succès." });
-            fetchRows();
-        } catch (err: any) {
-            toast({ title: "Erreur", description: err.message, variant: "destructive" });
-        } finally {
-            setIsSavingBox(null);
+        if (!error) {
+            toast({ title: "Case enregistrée" });
+            setCards(cards.map(c => c.id === card.id ? { ...c, isSaving: false, fileToUpload: null, url: urlTarget } : c));
+            if (user) await logAction('Modification', user.id, `${user.prenom} ${user.nom}`, user.email, `Mise à jour case CS: ${card.titre}`);
+        } else {
+            setCards(cards.map(c => c.id === card.id ? { ...c, isSaving: false } : c));
+            toast({ title: "Erreur", description: "Sauvegarde impossible", variant: "destructive" });
         }
     };
 
-    const saveChanges = async () => {
-        setIsSaving(true);
-        const supabase = createClient();
-
-        try {
-            for (let i = 0; i < rows.length; i++) {
-                const row = rows[i];
-                const updatedRow: any = {
-                    position: i, // L'index est répercuté ici garantissant le bon ordre
-                    oj_titre: row.oj.titre,
-                    oj_date: row.oj.date,
-                    oj_type: row.oj.type,
-                    cr_titre: row.cr.titre,
-                    cr_date: row.cr.date,
-                    cr_type: row.cr.type,
-                };
-
-                // Handle file uploads OJ
-                if (row.oj.type === 'file' && row.oj.fileToUpload) {
-                    const url = await handleFileUpload(row.oj.fileToUpload);
-                    if (url) updatedRow.oj_url = url;
-                } else if (row.oj.type === 'link') {
-                    updatedRow.oj_url = row.oj.url;
-                } else if (row.oj.type === 'empty') {
-                    updatedRow.oj_url = "";
-                } else {
-                    updatedRow.oj_url = row.oj.url; // Keep existing if file but no new file uploaded
-                }
-
-                // Handle file uploads CR
-                if (row.cr.type === 'file' && row.cr.fileToUpload) {
-                    const url = await handleFileUpload(row.cr.fileToUpload);
-                    if (url) updatedRow.cr_url = url;
-                } else if (row.cr.type === 'link') {
-                    updatedRow.cr_url = row.cr.url;
-                } else if (row.cr.type === 'empty') {
-                    updatedRow.cr_url = "";
-                } else {
-                    updatedRow.cr_url = row.cr.url;
-                }
-
-                if (row.id.startsWith('temp-')) {
-                    await supabase.from('conseil_syndical').insert([updatedRow]);
-                } else {
-                    await supabase.from('conseil_syndical').update(updatedRow).eq('id', row.id);
-                }
-            }
-            toast({ title: "Succès", description: "L'ordre des documents a été mis à jour." });
-            fetchRows(); // reload new DB ids
-        } catch (err: any) {
-            toast({ title: "Erreur", description: err.message, variant: "destructive" });
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
-    if (isLoading) return <div className="flex justify-center p-12 mt-12"><Loader2 className="w-10 h-10 animate-spin text-primary" /></div>;
+    if (isLoading || userLoading) return <div className="flex justify-center p-12 mt-12"><Loader2 className="w-10 h-10 animate-spin text-primary" /></div>;
 
     return (
-        <div className="max-w-6xl mx-auto space-y-8 pb-12 pt-6 px-4">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" asChild className="rounded-full shrink-0">
-                        <Link href="/dashboard"><ArrowLeft className="w-5 h-5" /></Link>
-                    </Button>
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-foreground">Docs du Conseil Syndical</h1>
-                        <p className="text-muted-foreground">Gérez les ordres du jour et comptes-rendus. Modifiez par paires (lignes).</p>
+        <div className="max-w-7xl mx-auto space-y-6 pb-12 pt-6 px-4">
+            <Card className="shadow-lg border-2 border-primary/10 overflow-hidden relative">
+                <div className="absolute top-0 right-0 p-8 opacity-5"></div>
+                <CardHeader>
+                    <div className="flex justify-between items-center z-10 relative">
+                        <div>
+                            <CardTitle className="text-3xl font-extrabold text-primary">Gestion Conseil Syndical</CardTitle>
+                            <CardDescription className="text-base mt-2 max-w-2xl font-medium">
+                                Ajoutez, renommez, supprimez et <b>réorganisez</b> vos documents du Conseil Syndical comme bon vous semble !
+                            </CardDescription>
+                        </div>
+                        <Button onClick={addCard} className="shadow-md rounded-full font-bold px-6">
+                            <Plus className="mr-2 h-5 w-5" /> Nouvelle Case
+                        </Button>
                     </div>
-                </div>
-                <div className="flex gap-2">
-                    <Button onClick={addRow} variant="outline" className="font-semibold">
-                        <Plus className="w-4 h-4 mr-2" /> Ajouter en haut
-                    </Button>
-                    <Button onClick={saveChanges} disabled={isSaving} className="font-bold px-8">
-                        {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                        Enregistrer tout
-                    </Button>
-                </div>
-            </div>
-
-            <Card className="bg-surface border-border shadow-md">
-                <CardContent className="p-6 space-y-6">
-                    {rows.map((row, idx) => (
-                        <div key={row.id} className="relative bg-background border border-border rounded-2xl p-4 sm:p-6 pb-8 shadow-sm">
-                            <div className="absolute top-4 right-4 z-10 flex items-center gap-1">
-                                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-full" onClick={() => moveRowUp(idx)} disabled={idx === 0} title="Monter d'un cran">
-                                    <ArrowUp className="w-4 h-4" />
-                                </Button>
-                                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-full" onClick={() => moveRowDown(idx)} disabled={idx === rows.length - 1} title="Descendre d'un cran">
-                                    <ArrowDown className="w-4 h-4" />
-                                </Button>
-                                <div className="w-px h-6 bg-border mx-1"></div>
-                                <Button size="sm" variant="destructive" className="h-8 w-8 p-0 rounded-full" onClick={() => confirmRemoveRow(idx, row.id)} title="Supprimer la ligne entière text-danger">
-                                    <Trash2 className="w-4 h-4" />
-                                </Button>
-                            </div>
-                            <div className="font-bold text-lg mb-4 text-foreground opacity-80">Ligne #{idx + 1}</div>
-
-                            <div className="flex flex-col md:flex-row gap-6">
-                                <BoxEditor
-                                    row={row}
-                                    rowIndex={idx}
-                                    col="oj"
-                                    label="Ordre du jour (Colonne Gauche)"
-                                    handleBoxChange={handleBoxChange}
-                                    saveBox={saveBox}
-                                    isSavingBox={isSavingBox?.rowIndex === idx && isSavingBox?.col === 'oj'}
-                                />
-                                <BoxEditor
-                                    row={row}
-                                    rowIndex={idx}
-                                    col="cr"
-                                    label="Compte rendu (Colonne Droite)"
-                                    handleBoxChange={handleBoxChange}
-                                    saveBox={saveBox}
-                                    isSavingBox={isSavingBox?.rowIndex === idx && isSavingBox?.col === 'cr'}
-                                />
-                            </div>
-                        </div>
-                    ))}
-
-                    {rows.length === 0 && (
-                        <div className="text-center py-12 text-muted-foreground">
-                            Aucune ligne configurée. Cliquez sur "Ajouter en haut".
-                        </div>
-                    )}
-                </CardContent>
+                </CardHeader>
             </Card>
 
-            <Dialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Confirmer la suppression</DialogTitle>
-                        <DialogDescription>
-                            Voulez-vous vraiment supprimer la ligne #{deleteConfirm ? deleteConfirm.index + 1 : ''} (Ordre du jour et Compte rendu) du Conseil Syndical ?
-                            Cette action est irréversible.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter className="mt-4">
-                        <Button variant="outline" onClick={() => setDeleteConfirm(null)} disabled={isSaving}>Annuler</Button>
-                        <Button variant="destructive" onClick={executeDelete} disabled={isSaving}>
-                            {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
-                            Supprimer définitivement
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <div className="mt-8">
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <SortableContext items={cards.map(c => c.id)} strategy={rectSortingStrategy}>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {cards.map((card) => (
+                                <SortableItem key={card.id} id={card.id} item={card} updateItem={updateItem} handleDelete={handleDelete} handleSave={handleSave} handleFileDrop={handleFileDrop} />
+                            ))}
+                        </div>
+                    </SortableContext>
+                </DndContext>
+
+                {cards.length === 0 && (
+                    <div className="text-center py-20 bg-surface border-2 border-dashed rounded-3xl opacity-60">
+                        <p className="text-muted-foreground font-medium text-lg">Aucune case pour le moment.</p>
+                        <Button variant="outline" onClick={addCard} className="mt-4"><Plus className="mr-2 w-4 h-4" /> Créer la première case</Button>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
