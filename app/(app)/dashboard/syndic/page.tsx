@@ -18,8 +18,10 @@ interface Syndic {
     nom: string;
     fonction: string;
     photo_url: string;
-    telephone: string;
-    email: string;
+    telephone_gestionnaire: string;
+    email_gestionnaire: string;
+    telephone_assistante: string;
+    email_assistante: string;
     adresse: string;
     gestionnaire: string;
     assistante: string;
@@ -65,7 +67,7 @@ export default function AdminSyndicPage() {
     const handleAddSyndic = () => {
         setSyndicList([
             ...syndicList,
-            { id: "new-" + Date.now(), nom: "", fonction: "Syndic de Copropriété", photo_url: "", telephone: "", email: "", adresse: "", gestionnaire: "", assistante: "" }
+            { id: "new-" + Date.now(), nom: "", fonction: "Syndic de Copropriété", photo_url: "", telephone_gestionnaire: "", email_gestionnaire: "", telephone_assistante: "", email_assistante: "", adresse: "", gestionnaire: "", assistante: "" }
         ]);
     };
 
@@ -237,12 +239,20 @@ export default function AdminSyndicPage() {
                                     <Input value={syndic.assistante} onChange={e => handleSyndicChange(syndic.id, 'assistante', e.target.value)} />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-bold text-foreground">Téléphone</label>
-                                    <Input value={syndic.telephone} onChange={e => handleSyndicChange(syndic.id, 'telephone', e.target.value)} />
+                                    <label className="text-sm font-bold text-foreground">Téléphone (Gestionnaire)</label>
+                                    <Input type="tel" value={syndic.telephone_gestionnaire || ""} onChange={e => handleSyndicChange(syndic.id, 'telephone_gestionnaire', e.target.value)} />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-bold text-foreground">Email</label>
-                                    <Input value={syndic.email} onChange={e => handleSyndicChange(syndic.id, 'email', e.target.value)} />
+                                    <label className="text-sm font-bold text-foreground">Téléphone (Assistante)</label>
+                                    <Input type="tel" value={syndic.telephone_assistante || ""} onChange={e => handleSyndicChange(syndic.id, 'telephone_assistante', e.target.value)} />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-foreground">Email (Gestionnaire)</label>
+                                    <Input type="email" value={syndic.email_gestionnaire || ""} onChange={e => handleSyndicChange(syndic.id, 'email_gestionnaire', e.target.value)} />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-foreground">Email (Assistante)</label>
+                                    <Input type="email" value={syndic.email_assistante || ""} onChange={e => handleSyndicChange(syndic.id, 'email_assistante', e.target.value)} />
                                 </div>
                                 <div className="space-y-2 md:col-span-2">
                                     <label className="text-sm font-bold text-foreground">Adresse complète</label>

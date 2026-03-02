@@ -16,7 +16,7 @@ export const registerSchema = z.object({
         .regex(/[0-9]/, { message: "Le mot de passe doit contenir au moins un chiffre" })
         .regex(/[^A-Za-z0-9]/, { message: "Le mot de passe doit contenir au moins un caractère spécial" }),
     confirmPassword: z.string().min(1, { message: "Veuillez confirmer votre mot de passe" }),
-    batiment: z.string().optional(),
+    batiment: z.string().min(1, { message: "Le bâtiment est obligatoire" }),
     appartement: z.string().min(1, { message: "Le numéro d'appartement est obligatoire" }),
     rgpd: z.literal(true, {
         errorMap: () => ({ message: "Vous devez accepter les conditions." }),

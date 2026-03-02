@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, User, Mail, Lock, Building, MapPin } from "lucide-react";
+import { Building2, User, Mail, Lock, Building, MapPin, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
@@ -22,6 +22,8 @@ import { logAction } from "../../../lib/logger";
 export default function RegisterPage() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const form = useForm<z.infer<typeof registerSchema>>({
         resolver: zodResolver(registerSchema),
@@ -151,7 +153,7 @@ export default function RegisterPage() {
                                         <Label>Adresse email</Label>
                                         <div className="relative">
                                             <Mail className="absolute left-3 top-3 h-5 w-5 text-muted-foreground pointer-events-none" />
-                                            <FormControl><Input className="pl-10" placeholder="jean.dupont@email.com" {...field} /></FormControl>
+                                            <FormControl><Input type="email" className="pl-10" placeholder="jean.dupont@email.com" {...field} /></FormControl>
                                         </div>
                                         <FormMessage />
                                     </FormItem>
@@ -163,7 +165,10 @@ export default function RegisterPage() {
                                             <Label>Mot de passe</Label>
                                             <div className="relative">
                                                 <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground pointer-events-none" />
-                                                <FormControl><Input className="pl-10" type="password" placeholder="••••••••" {...field} /></FormControl>
+                                                <FormControl><Input className="pl-10 pr-10" type={showPassword ? "text" : "password"} placeholder="••••••••" {...field} /></FormControl>
+                                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors focus:outline-none">
+                                                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                                </button>
                                             </div>
                                             {passwordValue && (
                                                 <div className="mt-2 text-xs">
@@ -184,7 +189,24 @@ export default function RegisterPage() {
                                     <FormField control={form.control} name="confirmPassword" render={({ field }) => (
                                         <FormItem>
                                             <Label>Confirmer mot de passe</Label>
-                                            <FormControl><Input type="password" placeholder="••••••••" {...field} /></FormControl>
+                                            <div className="relative">
+                                                <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground pointer-events-none" />
+                                                <FormControl>
+                                                    <Input
+                                                        className="pl-10 pr-10"
+                                                        type={showConfirmPassword ? "text" : "password"}
+                                                        placeholder="••••••••"
+                                                        {...field}
+                                                        onBlur={() => {
+                                                            field.onBlur();
+                                                            form.trigger("confirmPassword");
+                                                        }}
+                                                    />
+                                                </FormControl>
+                                                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors focus:outline-none">
+                                                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                                </button>
+                                            </div>
                                             <FormMessage />
                                         </FormItem>
                                     )} />
@@ -195,7 +217,7 @@ export default function RegisterPage() {
                                     <div className="grid grid-cols-2 gap-4">
                                         <FormField control={form.control} name="batiment" render={({ field }) => (
                                             <FormItem>
-                                                <Label>Bâtiment (Optionnel)</Label>
+                                                <Label>Bâtiment *</Label>
                                                 <FormControl><Input placeholder="Ex: B" {...field} /></FormControl>
                                                 <FormMessage />
                                             </FormItem>

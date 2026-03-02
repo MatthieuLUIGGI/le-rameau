@@ -9,8 +9,10 @@ interface Syndic {
     nom: string;
     fonction: string;
     photo_url: string;
-    telephone: string;
-    email: string;
+    telephone_gestionnaire: string;
+    email_gestionnaire: string;
+    telephone_assistante: string;
+    email_assistante: string;
     adresse: string;
     gestionnaire: string;
     assistante: string;
@@ -103,11 +105,31 @@ export default function SyndicPage() {
                                                 </div>
                                                 <div className="flex items-start gap-3">
                                                     <Phone className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                                                    <span className="font-medium py-0.5">{syndic.telephone}</span>
+                                                    <div>
+                                                        <span className="text-muted-foreground text-[10px] block font-semibold uppercase tracking-wider">Tél (Gestionnaire)</span>
+                                                        <span className="font-medium">{syndic.telephone_gestionnaire || "Non renseigné"}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-start gap-3">
+                                                    <Phone className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                                                    <div>
+                                                        <span className="text-muted-foreground text-[10px] block font-semibold uppercase tracking-wider">Tél (Assistante)</span>
+                                                        <span className="font-medium">{syndic.telephone_assistante || "Non renseigné"}</span>
+                                                    </div>
                                                 </div>
                                                 <div className="flex items-start gap-3">
                                                     <Mail className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                                                    <span className="font-medium py-0.5 break-all">{syndic.email}</span>
+                                                    <div>
+                                                        <span className="text-muted-foreground text-[10px] block font-semibold uppercase tracking-wider">Mail (Gestionnaire)</span>
+                                                        <span className="font-medium break-all">{syndic.email_gestionnaire || "Non renseigné"}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-start gap-3">
+                                                    <Mail className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                                                    <div>
+                                                        <span className="text-muted-foreground text-[10px] block font-semibold uppercase tracking-wider">Mail (Assistante)</span>
+                                                        <span className="font-medium break-all">{syndic.email_assistante || "Non renseigné"}</span>
+                                                    </div>
                                                 </div>
                                                 <div className="flex items-start gap-3 sm:col-span-2 mt-2">
                                                     <MapPin className="w-4 h-4 text-primary shrink-0 mt-1" />
