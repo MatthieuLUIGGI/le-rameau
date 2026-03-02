@@ -14,57 +14,50 @@ export default function DashboardPage() {
     const today = new Date();
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500 relative min-h-[80vh]">
-            {/* Full-page Background Image */}
-            <div
-                className="fixed top-0 bottom-0 right-0 left-0 lg:left-64 z-0 pointer-events-none transition-opacity duration-1000 bg-cover bg-center bg-no-repeat contrast-125 saturate-150"
-                style={{
-                    backgroundImage: "url('/residence-bg.jpg')",
-                    opacity: 0.6
-                }}
-            />
+        <div className="space-y-6 animate-in fade-in duration-500 relative min-h-[80vh] flex flex-col">
+            <div>
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 relative z-10 w-full mb-6">
+                    <div>
+                        {isUserLoading ? (
+                            <Skeleton className="h-10 w-64 mb-2" />
+                        ) : (
+                            <h1 className="text-3xl font-extrabold tracking-tight text-primary">
+                                Bonjour, {user?.prenom || "Résident"} 👋
+                            </h1>
+                        )}
+                        <p className="text-blue-500 font-medium capitalize">
+                            {format(today, "EEEE d MMMM yyyy", { locale: fr })}
+                        </p>
+                    </div>
+                </div>
 
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 relative z-10 w-full">
-                <div>
-                    {isUserLoading ? (
-                        <Skeleton className="h-10 w-64 mb-2" />
-                    ) : (
-                        <h1 className="text-3xl font-extrabold tracking-tight text-primary">
-                            Bonjour, {user?.prenom || "Résident"} 👋
-                        </h1>
-                    )}
-                    <p className="text-blue-500 font-medium capitalize">
-                        {format(today, "EEEE d MMMM yyyy", { locale: fr })}
-                    </p>
+                <div className="relative z-10 mb-6">
+                    <AlertBanner />
+                </div>
+
+                {/* Les 4 boutons sortis */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 relative z-10">
+                    <Link href="/actualites" className="flex items-center justify-center gap-2 p-4 bg-surface/80 backdrop-blur-md border border-border hover:bg-muted/50 rounded-xl transition-colors shadow-sm font-semibold text-primary">
+                        <Newspaper className="h-5 w-5" />
+                        <span className="truncate">Actualités</span>
+                    </Link>
+                    <Link href="/contactez-nous" className="flex items-center justify-center gap-2 p-4 bg-surface/80 backdrop-blur-md border border-border hover:bg-muted/50 rounded-xl transition-colors shadow-sm font-semibold text-blue-500">
+                        <Mail className="h-5 w-5" />
+                        <span className="truncate">Nous contacter</span>
+                    </Link>
+                    <a href="/livret-accueil.pdf" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 p-4 bg-surface/80 backdrop-blur-md border border-border hover:bg-muted/50 rounded-xl transition-colors shadow-sm font-semibold text-green-600">
+                        <Book className="h-5 w-5" />
+                        <span className="truncate">Livret d'accueil</span>
+                    </a>
+                    <a href="/reglement-copropriete.pdf" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 p-4 bg-surface/80 backdrop-blur-md border border-border hover:bg-muted/50 rounded-xl transition-colors shadow-sm font-semibold text-orange-500">
+                        <FileText className="h-5 w-5" />
+                        <span className="truncate">Règlement</span>
+                    </a>
                 </div>
             </div>
 
-            <div className="relative z-10">
-                <AlertBanner />
-            </div>
-
-            {/* Les 4 boutons sortis */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 relative z-10">
-                <Link href="/actualites" className="flex items-center justify-center gap-2 p-4 bg-surface/80 backdrop-blur-md border border-border hover:bg-muted/50 rounded-xl transition-colors shadow-sm font-semibold text-primary">
-                    <Newspaper className="h-5 w-5" />
-                    <span className="truncate">Actualités</span>
-                </Link>
-                <Link href="/contactez-nous" className="flex items-center justify-center gap-2 p-4 bg-surface/80 backdrop-blur-md border border-border hover:bg-muted/50 rounded-xl transition-colors shadow-sm font-semibold text-blue-500">
-                    <Mail className="h-5 w-5" />
-                    <span className="truncate">Nous contacter</span>
-                </Link>
-                <a href="/livret-accueil.pdf" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 p-4 bg-surface/80 backdrop-blur-md border border-border hover:bg-muted/50 rounded-xl transition-colors shadow-sm font-semibold text-green-600">
-                    <Book className="h-5 w-5" />
-                    <span className="truncate">Livret d'accueil</span>
-                </a>
-                <a href="/reglement-copropriete.pdf" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 p-4 bg-surface/80 backdrop-blur-md border border-border hover:bg-muted/50 rounded-xl transition-colors shadow-sm font-semibold text-orange-500">
-                    <FileText className="h-5 w-5" />
-                    <span className="truncate">Règlement</span>
-                </a>
-            </div>
-
             {/* Nouvelle section Accès rapides */}
-            <div className="mt-8 relative z-10">
+            <div className="mt-auto pt-16 relative z-10">
                 <div className="mb-6">
                     <h2 className="text-2xl font-bold mb-1">Accès rapides</h2>
                 </div>

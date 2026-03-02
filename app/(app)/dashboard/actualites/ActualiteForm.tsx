@@ -189,15 +189,79 @@ export default function ActualiteForm({ initialData }: ActualiteFormProps) {
                         <CardDescription>Agrémentez votre article avec des illustrations ou fichiers.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6 pt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-foreground flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Lien de l'image de couverture</label>
+                        <div className="space-y-4">
+                            <label className="text-sm font-bold text-foreground flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Image de couverture</label>
+                            <div
+                                onDrop={(e) => {
+                                    e.preventDefault();
+                                    const file = e.dataTransfer.files?.[0];
+                                    if (file && file.type.startsWith('image/')) {
+                                        const reader = new FileReader();
+                                        reader.onload = (event) => setFormData(prev => ({ ...prev, image_url: event.target?.result as string }));
+                                        reader.readAsDataURL(file);
+                                    }
+                                }}
+                                onDragOver={(e) => e.preventDefault()}
+                                onClick={() => document.getElementById('image-upload')?.click()}
+                                className="border-2 border-dashed border-border rounded-xl p-4 text-center cursor-pointer hover:bg-muted/30 transition-colors"
+                            >
+                                {formData.image_url ? (
+                                    <div className="relative">
+                                        <img src={formData.image_url} alt="Cover Preview" className="w-full h-32 rounded-lg object-cover mb-2" />
+                                    </div>
+                                ) : (
+                                    <ImageIcon className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                                )}
+                                <p className="text-sm font-medium">Glissez une image ou cliquez</p>
+                                <p className="text-xs text-muted-foreground mt-1 text-center">Ou collez une URL ci-dessous</p>
+                                <input type="file" id="image-upload" className="hidden" accept="image/*" onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        const reader = new FileReader();
+                                        reader.onload = (event) => setFormData(prev => ({ ...prev, image_url: event.target?.result as string }));
+                                        reader.readAsDataURL(file);
+                                    }
+                                }} />
+                            </div>
                             <Input placeholder="https://..." name="image_url" value={formData.image_url} onChange={handleChange} />
                             <p className="text-xs text-muted-foreground">URL d'une image en grand format .jpg ou .png</p>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-foreground flex items-center gap-2"><FileText className="w-4 h-4" /> Lien du fichier PDF joint</label>
+                        <div className="space-y-4">
+                            <label className="text-sm font-bold text-foreground flex items-center gap-2"><FileText className="w-4 h-4" /> Fichier PDF joint</label>
+                            <div
+                                onDrop={(e) => {
+                                    e.preventDefault();
+                                    const file = e.dataTransfer.files?.[0];
+                                    if (file && file.type === 'application/pdf') {
+                                        const reader = new FileReader();
+                                        reader.onload = (event) => setFormData(prev => ({ ...prev, pdf_url: event.target?.result as string }));
+                                        reader.readAsDataURL(file);
+                                    }
+                                }}
+                                onDragOver={(e) => e.preventDefault()}
+                                onClick={() => document.getElementById('pdf-upload')?.click()}
+                                className="border-2 border-dashed border-border rounded-xl p-4 text-center cursor-pointer hover:bg-muted/30 transition-colors"
+                            >
+                                {formData.pdf_url ? (
+                                    <div className="bg-primary/10 text-primary font-semibold rounded-lg p-3 mb-2 flex items-center justify-center">
+                                        <FileText className="w-6 h-6 mr-2" /> PDF enregistré
+                                    </div>
+                                ) : (
+                                    <FileText className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                                )}
+                                <p className="text-sm font-medium">Glissez un PDF ou cliquez</p>
+                                <p className="text-xs text-muted-foreground mt-1 text-center">Ou collez une URL ci-dessous</p>
+                                <input type="file" id="pdf-upload" className="hidden" accept="application/pdf" onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        const reader = new FileReader();
+                                        reader.onload = (event) => setFormData(prev => ({ ...prev, pdf_url: event.target?.result as string }));
+                                        reader.readAsDataURL(file);
+                                    }
+                                }} />
+                            </div>
                             <Input placeholder="https://..." name="pdf_url" value={formData.pdf_url} onChange={handleChange} />
-                            <p className="text-xs text-muted-foreground">Si un contrat ou compte rendu est afférent.</p>
+                            <p className="text-xs text-muted-foreground">Si un document (contrat, compte rendu...) est afférent.</p>
                         </div>
                     </CardContent>
                 </Card>

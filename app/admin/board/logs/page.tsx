@@ -29,6 +29,9 @@ export default function BoardLogsPage() {
     const [filterAction, setFilterAction] = useState<string>("Toutes");
     const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 20;
+
     const fetchLogs = async () => {
         const supabase = createClient();
         const { data, error } = await supabase
@@ -54,6 +57,9 @@ export default function BoardLogsPage() {
 
         return matchesSearch && matchesAction;
     });
+
+    const totalPages = Math.ceil(filteredLogs.length / ITEMS_PER_PAGE) || 1;
+    const paginatedLogs = filteredLogs.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
     if (isLoading) {
         return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -150,7 +156,7 @@ export default function BoardLogsPage() {
                     <Input
                         placeholder="Rechercher par nom, email ou détails..."
                         value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                        onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
                         className="pl-9 h-11 bg-background"
                     />
                 </div>
@@ -158,7 +164,7 @@ export default function BoardLogsPage() {
                     <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
                     <select
                         value={filterAction}
-                        onChange={(e) => setFilterAction(e.target.value)}
+                        onChange={(e) => { setFilterAction(e.target.value); setCurrentPage(1); }}
                         className="bg-transparent text-foreground border-none text-sm font-medium w-full focus:outline-none focus:ring-0 cursor-pointer"
                     >
                         {actionTypes.map(type => (
@@ -181,7 +187,7 @@ export default function BoardLogsPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredLogs.map((log) => (
+                            {paginatedLogs.map((log) => (
                                 <tr key={log.id} onClick={() => setSelectedLog(log)} className="border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors">
                                     <td className="px-6 py-4 flex items-center gap-2 text-foreground font-medium whitespace-nowrap">
                                         <Calendar className="w-4 h-4 text-muted-foreground" />
@@ -205,7 +211,7 @@ export default function BoardLogsPage() {
                                     </td>
                                 </tr>
                             ))}
-                            {filteredLogs.length === 0 && (
+                            {paginatedLogs.length === 0 && (
                                 <tr>
                                     <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
                                         <Activity className="h-8 w-8 mx-auto mb-2 opacity-20" />
@@ -216,6 +222,27 @@ export default function BoardLogsPage() {
                         </tbody>
                     </table>
                 </div>
+                {totalPages > 1 && (
+                    <div className="p-4 border-t border-border flex items-center justify-between bg-muted/10">
+                        <Button
+                            variant="outline"
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        >
+                            Précédent
+                        </Button>
+                        <span className="text-sm font-medium text-muted-foreground">
+                            Page {currentPage} sur {totalPages}
+                        </span>
+                        <Button
+                            variant="outline"
+                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        >
+                            Suivant
+                        </Button>
+                    </div>
+                )}
             </Card>
 
             <Dialog open={!!selectedLog} onOpenChange={(open) => !open && setSelectedLog(null)}>
