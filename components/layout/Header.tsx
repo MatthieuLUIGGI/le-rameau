@@ -18,7 +18,6 @@ export function Header() {
         if (pathname.includes('/profil')) return 'Profil';
         // Legacy routes if not removed
         if (pathname.includes('/evenements')) return 'Événements';
-        if (pathname.includes('/alertes')) return 'Alertes';
         if (pathname.includes('/messages')) return 'Messages';
         if (pathname.includes('/contacts')) return 'Contacts';
 

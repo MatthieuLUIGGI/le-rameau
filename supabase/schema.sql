@@ -1,135 +1,148 @@
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
 
-CREATE TYPE user_role AS ENUM ('resident', 'conseil', 'admin', 'super_admin');
-CREATE TYPE announce_category AS ENUM ('travaux', 'information', 'assemblee', 'divers');
-CREATE TYPE alerte_category AS ENUM ('incendie', 'degat_eau', 'ascenseur', 'intrusion', 'coupure', 'autre');
-CREATE TYPE alerte_statut AS ENUM ('en_cours', 'resolu');
-CREATE TYPE message_type AS ENUM ('texte', 'image', 'fichier');
-CREATE TYPE contact_type AS ENUM ('interne', 'externe');
-
-CREATE TABLE residences (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  nom TEXT NOT NULL,
-  adresse TEXT NOT NULL,
-  code_postal TEXT NOT NULL,
-  ville TEXT NOT NULL,
-  latitude NUMERIC,
-  longitude NUMERIC,
-  logo_url TEXT,
-  couleur_principale TEXT DEFAULT '#1F3864'
+CREATE TABLE public.actualites (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  titre text NOT NULL,
+  extrait text NOT NULL,
+  contenu text NOT NULL,
+  image_url text,
+  pdf_url text,
+  priorite text DEFAULT 'normale'::text CHECK (priorite = ANY (ARRAY['basse'::text, 'normale'::text, 'haute'::text])),
+  date_expiration timestamp with time zone,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT actualites_pkey PRIMARY KEY (id)
 );
-
-CREATE TABLE profiles (
-  id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
-  residence_id UUID REFERENCES residences(id),
-  email TEXT UNIQUE NOT NULL,
-  nom TEXT NOT NULL,
-  prenom TEXT NOT NULL,
-  role user_role DEFAULT 'resident',
-  appartement TEXT,
-  batiment TEXT,
-  telephone TEXT,
-  avatar_url TEXT,
-  is_verified BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+CREATE TABLE public.admin_board_password (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  password_value text NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT admin_board_password_pkey PRIMARY KEY (id)
 );
-
-CREATE TABLE annonces (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  titre TEXT NOT NULL,
-  contenu TEXT NOT NULL,
-  categorie announce_category NOT NULL,
-  auteur_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
-  residence_id UUID REFERENCES residences(id) ON DELETE CASCADE NOT NULL,
-  is_important BOOLEAN DEFAULT FALSE,
-  published_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  pieces_jointes TEXT[]
+CREATE TABLE public.assemblee_generale (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  position integer DEFAULT 0,
+  pv_titre text,
+  pv_date text,
+  pv_type text,
+  pv_url text,
+  rapport_titre text,
+  rapport_date text,
+  rapport_type text,
+  rapport_url text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT assemblee_generale_pkey PRIMARY KEY (id)
 );
-
-CREATE TABLE alertes (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  titre TEXT NOT NULL,
-  description TEXT NOT NULL,
-  categorie alerte_category NOT NULL,
-  statut alerte_statut DEFAULT 'en_cours',
-  auteur_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
-  residence_id UUID REFERENCES residences(id) ON DELETE CASCADE NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  resolved_at TIMESTAMP WITH TIME ZONE
+CREATE TABLE public.conseil_password (
+  page_name text NOT NULL,
+  password_value text NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT conseil_password_pkey PRIMARY KEY (page_name)
 );
-
-CREATE TABLE evenements (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  titre TEXT NOT NULL,
-  description TEXT NOT NULL,
-  date_debut TIMESTAMP WITH TIME ZONE NOT NULL,
-  date_fin TIMESTAMP WITH TIME ZONE NOT NULL,
-  lieu TEXT NOT NULL,
-  auteur_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
-  residence_id UUID REFERENCES residences(id) ON DELETE CASCADE NOT NULL,
-  participants UUID[] DEFAULT '{}'::UUID[]
+CREATE TABLE public.conseil_syndical (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  position integer NOT NULL,
+  oj_titre text,
+  oj_date text,
+  oj_type text DEFAULT 'empty'::text CHECK (oj_type = ANY (ARRAY['file'::text, 'link'::text, 'empty'::text])),
+  oj_url text,
+  cr_titre text,
+  cr_date text,
+  cr_type text DEFAULT 'empty'::text CHECK (cr_type = ANY (ARRAY['file'::text, 'link'::text, 'empty'::text])),
+  cr_url text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT conseil_syndical_pkey PRIMARY KEY (id)
 );
-
-CREATE TABLE canaux (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  nom TEXT NOT NULL,
-  description TEXT,
-  residence_id UUID REFERENCES residences(id) ON DELETE CASCADE NOT NULL,
-  is_private BOOLEAN DEFAULT FALSE
+CREATE TABLE public.consultation_votes (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  consultation_id uuid,
+  user_id uuid,
+  appartement text NOT NULL,
+  option_id text NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT consultation_votes_pkey PRIMARY KEY (id),
+  CONSTRAINT consultation_votes_consultation_id_fkey FOREIGN KEY (consultation_id) REFERENCES public.consultations(id),
+  CONSTRAINT consultation_votes_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
-
-CREATE TABLE messages (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  contenu TEXT NOT NULL,
-  auteur_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
-  canal_id UUID REFERENCES canaux(id) ON DELETE CASCADE,
-  destinataire_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-  type message_type DEFAULT 'texte',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  is_read BOOLEAN DEFAULT FALSE,
-  CHECK (canal_id IS NOT NULL OR destinataire_id IS NOT NULL)
+CREATE TABLE public.consultations (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  question text NOT NULL,
+  options jsonb NOT NULL,
+  statut text DEFAULT 'actif'::text CHECK (statut = ANY (ARRAY['actif'::text, 'termine'::text])),
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT consultations_pkey PRIMARY KEY (id)
 );
-
-CREATE TABLE contacts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  nom TEXT NOT NULL,
-  role TEXT NOT NULL,
-  telephone TEXT NOT NULL,
-  email TEXT,
-  disponibilite TEXT,
-  residence_id UUID REFERENCES residences(id) ON DELETE CASCADE NOT NULL,
-  is_public BOOLEAN DEFAULT TRUE,
-  type contact_type DEFAULT 'externe'
+CREATE TABLE public.membres_conseil_syndical (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  nom text NOT NULL,
+  batiment text NOT NULL,
+  photo_url text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT membres_conseil_syndical_pkey PRIMARY KEY (id)
 );
-
--- RLS
-ALTER TABLE residences ENABLE ROW LEVEL SECURITY;
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE annonces ENABLE ROW LEVEL SECURITY;
-ALTER TABLE alertes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE evenements ENABLE ROW LEVEL SECURITY;
-ALTER TABLE canaux ENABLE ROW LEVEL SECURITY;
-ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE contacts ENABLE ROW LEVEL SECURITY;
-
--- Triggers
-CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.profiles (id, email, nom, prenom)
-  VALUES (new.id, new.email, '', '');
-  RETURN new;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE PROCEDURE handle_new_user();
-
--- Indexes
-CREATE INDEX IF NOT EXISTS idx_profiles_residence_id ON profiles(residence_id);
-CREATE INDEX IF NOT EXISTS idx_annonces_residence_id ON annonces(residence_id);
-CREATE INDEX IF NOT EXISTS idx_alertes_statut_residence_id ON alertes(statut, residence_id);
-CREATE INDEX IF NOT EXISTS idx_messages_canal_id ON messages(canal_id);
+CREATE TABLE public.notifications (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  title text NOT NULL,
+  message text NOT NULL,
+  link_url text,
+  type text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  read_by ARRAY DEFAULT '{}'::uuid[],
+  entity_id uuid,
+  CONSTRAINT notifications_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.profiles (
+  id uuid NOT NULL,
+  email text NOT NULL UNIQUE,
+  nom text NOT NULL,
+  prenom text NOT NULL,
+  role USER-DEFINED DEFAULT 'membre'::user_role,
+  appartement text,
+  batiment text,
+  telephone text,
+  avatar_url text,
+  is_verified boolean DEFAULT false,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.syndic (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  nom text NOT NULL,
+  fonction text NOT NULL,
+  photo_url text,
+  telephone_gestionnaire text CHECK (telephone_gestionnaire ~ '^[0-9+ \-\(\)]*$'::text OR telephone_gestionnaire IS NULL),
+  email_gestionnaire text CHECK (email_gestionnaire ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'::text OR email_gestionnaire = ''::text OR email_gestionnaire IS NULL),
+  adresse text,
+  gestionnaire text,
+  assistante text,
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  telephone_assistante text CHECK (telephone_assistante ~ '^[0-9+ \-\(\)]*$'::text OR telephone_assistante IS NULL),
+  email_assistante text CHECK (email_assistante ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'::text OR email_assistante = ''::text OR email_assistante IS NULL),
+  CONSTRAINT syndic_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.user_logs (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid,
+  user_name text NOT NULL,
+  user_email text NOT NULL,
+  action_type text NOT NULL,
+  details text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  old_data jsonb,
+  new_data jsonb,
+  CONSTRAINT user_logs_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.vigik_info (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  prix numeric NOT NULL DEFAULT 16.00,
+  description text NOT NULL DEFAULT 'Les nouveaux badges sont facturés directement sur vos charges de copropriété. Limite de 4 badges par appartement.'::text,
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT vigik_info_pkey PRIMARY KEY (id)
+);

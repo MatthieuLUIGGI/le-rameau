@@ -43,22 +43,6 @@ export interface Annonce {
     pieces_jointes?: string[]
 }
 
-export type AlerteCategory = 'incendie' | 'degat_eau' | 'ascenseur' | 'intrusion' | 'coupure' | 'autre'
-export type AlerteStatut = 'en_cours' | 'resolu'
-
-export interface Alerte {
-    id: string
-    titre: string
-    description: string
-    categorie: AlerteCategory
-    statut: AlerteStatut
-    auteur_id: string
-    auteur?: User
-    residence_id: string
-    created_at: string
-    resolved_at?: string
-}
-
 export interface Evenement {
     id: string
     titre: string

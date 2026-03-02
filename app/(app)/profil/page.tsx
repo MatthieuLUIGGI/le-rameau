@@ -241,10 +241,10 @@ export default function ProfilPage() {
             <Card className="text-white overflow-hidden border-none shadow-xl relative">
                 {/* Banner Background */}
                 <div
-                    className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat contrast-125 saturate-150"
+                    className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat saturate-150"
                     style={{ backgroundImage: "url('/residence-bg.jpg')" }}
                 />
-                <div className="absolute inset-0 z-0 bg-primary/80 backdrop-blur-sm" />
+                <div className="absolute inset-0 z-0 bg-black/40" />
 
                 <CardContent className="p-8 sm:p-12 relative z-10 flex flex-col md:flex-row items-center gap-8">
                     <div className="absolute top-0 right-0 p-8 opacity-10">

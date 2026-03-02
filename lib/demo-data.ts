@@ -1,4 +1,4 @@
-import { User, Residence, Annonce, Alerte, Evenement, Canal, Message, Contact, WeatherDay } from '../types';
+import { User, Residence, Annonce, Evenement, Canal, Message, Contact, WeatherDay } from '../types';
 
 export const DEMO_MODE = !process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -29,10 +29,6 @@ export const demoAnnonces: Annonce[] = [
     { id: 'ann_5', titre: 'Objets trouvés', contenu: 'Un trousseau de clés a été retrouvé près de la loge du gardien.', categorie: 'divers', auteur_id: 'usr_1', auteur: demoUsers[0], residence_id: 'res_1', is_important: false, published_at: new Date().toISOString(), created_at: new Date().toISOString() }
 ];
 
-export const demoAlertes: Alerte[] = [
-    { id: 'al_1', titre: 'Fuite parking sous-sol', description: 'Une fuite importante est signalée au niveau -1 du parking B.', categorie: 'degat_eau', statut: 'en_cours', auteur_id: 'usr_1', auteur: demoUsers[0], residence_id: 'res_1', created_at: new Date().toISOString() },
-    { id: 'al_2', titre: 'Panne ascenseur bâtiment A', description: 'L\'ascenseur du bâtiment A est en panne depuis ce matin.', categorie: 'ascenseur', statut: 'resolu', auteur_id: 'usr_4', auteur: demoUsers[3], residence_id: 'res_1', created_at: new Date().toISOString(), resolved_at: new Date().toISOString() }
-];
 
 export const demoEvenements: Evenement[] = [
     { id: 'evt_1', titre: 'Assemblée Générale', description: 'AG annuelle de la copropriété.', date_debut: new Date(Date.now() + 86400000 * 5).toISOString(), date_fin: new Date(Date.now() + 86400000 * 5 + 7200000).toISOString(), lieu: 'Salle polyvalente', auteur_id: 'usr_2', residence_id: 'res_1', participants: [] },

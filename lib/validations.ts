@@ -32,9 +32,3 @@ export const announceSchema = z.object({
     categorie: z.enum(["travaux", "information", "assemblee", "divers"]),
     is_important: z.boolean().optional(),
 });
-
-export const alerteSchema = z.object({
-    titre: z.string().min(5, { message: "Le titre est obligatoire" }),
-    description: z.string().min(10, { message: "La description est obligatoire" }),
-    categorie: z.enum(["incendie", "degat_eau", "ascenseur", "intrusion", "coupure", "autre"]),
-});

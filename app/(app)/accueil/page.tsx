@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useUser } from "../../../lib/hooks/useUser";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { AlertBanner } from "../../../components/dashboard/AlertBanner";
+
 import { Skeleton } from "../../../components/ui/skeleton";
 import { Newspaper, Mail, Book, FileText, Download, Users, Key, Landmark, MessageSquare } from "lucide-react";
 import Link from "next/link";
@@ -31,9 +31,6 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                <div className="relative z-10 mb-6">
-                    <AlertBanner />
-                </div>
 
                 {/* Les 4 boutons sortis */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 relative z-10">

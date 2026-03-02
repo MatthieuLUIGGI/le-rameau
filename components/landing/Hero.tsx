@@ -40,7 +40,7 @@ export function Hero() {
                     </h1>
                     <p className="text-lg lg:text-xl text-blue-100 dark:text-muted-foreground mb-8 max-w-2xl mx-auto lg:mx-0">
                         La plateforme tout-en-un pour les résidents et les gestionnaires de copropriété.
-                        Annonces, alertes, messagerie et bien plus.
+                        Annonces, messagerie et bien plus.
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
                         <Button size="lg" className="bg-white dark:bg-primary text-primary dark:text-primary-foreground hover:bg-white/90 dark:hover:bg-primary/90 font-bold rounded-full px-8 h-14 text-lg w-full sm:w-auto shadow-xl border border-white/10" asChild>
