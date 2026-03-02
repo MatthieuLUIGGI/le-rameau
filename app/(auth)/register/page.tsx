@@ -183,7 +183,7 @@ export default function RegisterPage() {
                                     )} />
                                     <FormField control={form.control} name="confirmPassword" render={({ field }) => (
                                         <FormItem>
-                                            <Label>Confirmer mdp</Label>
+                                            <Label>Confirmer mot de passe</Label>
                                             <FormControl><Input type="password" placeholder="••••••••" {...field} /></FormControl>
                                             <FormMessage />
                                         </FormItem>
