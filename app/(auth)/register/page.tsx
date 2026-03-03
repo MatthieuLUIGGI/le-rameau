@@ -39,6 +39,7 @@ export default function RegisterPage() {
     });
 
     const passwordValue = form.watch("password") || "";
+    const confirmPasswordValue = form.watch("confirmPassword") || "";
 
     const strengthScore = (() => {
         let score = 0;
@@ -207,6 +208,15 @@ export default function RegisterPage() {
                                                     {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                                 </button>
                                             </div>
+                                            {confirmPasswordValue && passwordValue && (
+                                                <div className="mt-2 text-xs">
+                                                    {confirmPasswordValue === passwordValue ? (
+                                                        <p className="text-green-600 font-semibold leading-tight">Les mots de passe correspondent.</p>
+                                                    ) : (
+                                                        <p className="text-destructive font-semibold leading-tight">Les mots de passe ne correspondent pas.</p>
+                                                    )}
+                                                </div>
+                                            )}
                                             <FormMessage />
                                         </FormItem>
                                     )} />
@@ -217,7 +227,7 @@ export default function RegisterPage() {
                                     <div className="grid grid-cols-2 gap-4">
                                         <FormField control={form.control} name="batiment" render={({ field }) => (
                                             <FormItem>
-                                                <Label>Bâtiment *</Label>
+                                                <Label>Bâtiment</Label>
                                                 <FormControl><Input placeholder="Ex: B" {...field} /></FormControl>
                                                 <FormMessage />
                                             </FormItem>
