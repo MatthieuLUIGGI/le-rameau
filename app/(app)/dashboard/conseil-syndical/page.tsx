@@ -67,8 +67,8 @@ function SortableItem({ id, item, updateItem, handleDelete, handleSave, handleFi
                         </div>
                     ) : (
                         <div className="text-xs text-muted-foreground flex flex-col items-center gap-1">
-                            <UploadCloud className="w-6 h-6 mb-1 opacity-50" />
-                            <span>Glissez un PDF / Fichier</span>
+                            <Plus className="w-6 h-6 shrink-0 opacity-50" />
+                            <span>Glissez un PDF / Fichier ou ajouter un lien</span>
                         </div>
                     )}
                     <input type="file" className="absolute w-full h-full opacity-0 cursor-pointer inset-0" onChange={e => e.target.files && handleFileDrop(id, e.target.files[0])} />
@@ -96,19 +96,33 @@ export default function AdminConseilSyndicalPage() {
     );
 
     useEffect(() => {
-        if (!userLoading && user && user.role !== 'admin' && user.role !== 'conseil' && user.role !== 'super_admin') redirect("/accueil");
+        if (!userLoading && user && user.role !== 'ag') redirect("/accueil");
     }, [user, userLoading]);
 
     useEffect(() => {
-        if (!userLoading && (user?.role === 'admin' || user?.role === 'conseil' || user?.role === 'super_admin')) fetchCards();
+        if (!userLoading && user?.role === 'ag') fetchCards();
     }, [user, userLoading]);
 
     const fetchCards = async () => {
         const supabase = createClient();
         const { data, error } = await supabase.from('conseil_syndical').select('*').order('position', { ascending: true });
-        if (!error && data) {
-            setCards(data.map(d => ({ ...d, fileToUpload: null, isSaving: false })));
+
+        let loadedCards = data ? data.map(d => ({ ...d, fileToUpload: null, isSaving: false })) : [];
+
+        if (loadedCards.length < 6) {
+            const missingCount = 6 - loadedCards.length;
+            const newInserts = Array.from({ length: missingCount }).map((_, i) => ({
+                titre: '', date: '', type: 'empty', url: '', position: loadedCards.length + i
+            }));
+
+            const { data: insertedData, error: insErr } = await supabase.from('conseil_syndical').insert(newInserts).select();
+            if (insertedData) {
+                const newCardsFormatted = insertedData.map(d => ({ ...d, fileToUpload: null, isSaving: false })).sort((a, b) => a.position - b.position);
+                loadedCards = [...loadedCards, ...newCardsFormatted];
+            }
         }
+
+        setCards(loadedCards.sort((a, b) => a.position - b.position));
         setIsLoading(false);
     };
 
@@ -210,9 +224,6 @@ export default function AdminConseilSyndicalPage() {
                                 Ajoutez, renommez, supprimez et <b>réorganisez</b> vos documents du Conseil Syndical comme bon vous semble !
                             </CardDescription>
                         </div>
-                        <Button onClick={addCard} className="shadow-md rounded-full font-bold px-6">
-                            <Plus className="mr-2 h-5 w-5" /> Nouvelle Case
-                        </Button>
                     </div>
                 </CardHeader>
             </Card>
@@ -220,20 +231,21 @@ export default function AdminConseilSyndicalPage() {
             <div className="mt-8">
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <SortableContext items={cards.map(c => c.id)} strategy={rectSortingStrategy}>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {cards.map((card) => (
                                 <SortableItem key={card.id} id={card.id} item={card} updateItem={updateItem} handleDelete={handleDelete} handleSave={handleSave} handleFileDrop={handleFileDrop} />
                             ))}
+                            <div
+                                onClick={addCard}
+                                className="bg-surface/50 border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/30 cursor-pointer rounded-xl flex items-center justify-center min-h-[300px] transition-all group"
+                            >
+                                <div className="bg-primary/10 text-primary p-4 rounded-full group-hover:scale-110 transition-transform">
+                                    <Plus className="w-8 h-8" />
+                                </div>
+                            </div>
                         </div>
                     </SortableContext>
                 </DndContext>
-
-                {cards.length === 0 && (
-                    <div className="text-center py-20 bg-surface border-2 border-dashed rounded-3xl opacity-60">
-                        <p className="text-muted-foreground font-medium text-lg">Aucune case pour le moment.</p>
-                        <Button variant="outline" onClick={addCard} className="mt-4"><Plus className="mr-2 w-4 h-4" /> Créer la première case</Button>
-                    </div>
-                )}
             </div>
         </div>
     );

@@ -96,7 +96,7 @@ export default function AGPage() {
                     Aucun document n'a été publié pour le moment.
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {cards.map((card) => (
                         <DocumentCard key={card.id} box={card} />
                     ))}
