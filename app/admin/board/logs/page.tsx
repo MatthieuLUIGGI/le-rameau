@@ -65,7 +65,7 @@ export default function BoardLogsPage() {
         return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
     }
 
-    const actionTypes = ["Toutes", "Connexion", "Déconnexion", "Création", "Modification", "Suppression"];
+    const actionTypes = ["Toutes", "Connexion", "Déconnexion", "Création", "Modification", "Suppression", "Expiration"];
 
     const getActionColor = (action: string) => {
         switch (action) {
@@ -74,6 +74,7 @@ export default function BoardLogsPage() {
             case 'Création': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
             case 'Modification': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
             case 'Suppression': return 'bg-danger/10 text-danger border-danger/20';
+            case 'Expiration': return 'bg-rose-500/10 text-rose-500 border-rose-500/20';
             default: return 'bg-muted/30 text-muted-foreground border-border';
         }
     };

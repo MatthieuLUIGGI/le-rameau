@@ -1,6 +1,6 @@
 import { createClient } from "./supabase/client";
 
-export type ActionType = 'Connexion' | 'Déconnexion' | 'Création' | 'Modification' | 'Suppression';
+export type ActionType = 'Connexion' | 'Déconnexion' | 'Création' | 'Modification' | 'Suppression' | 'Expiration';
 
 export const logAction = async (
     action_type: ActionType,
