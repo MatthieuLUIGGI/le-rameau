@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "../../lib/supabase/client";
-import { Lock, Unlock, Save, Loader2, LayoutDashboard, Users, KeyRound, ScrollText } from "lucide-react";
+import { Lock, Unlock, Save, Loader2, LayoutDashboard, Users, KeyRound, ScrollText, Home } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
@@ -183,6 +183,12 @@ export default function BoardLayout({ children }: { children: React.ReactNode })
                         >
                             <KeyRound className="h-4 w-4" /> Mot de passe
                         </Link>
+                    </div>
+
+                    <div className="ml-auto flex items-center">
+                        <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
+                            <Link href="/accueil"><Home className="h-4 w-4 mr-2" /> Retour à l'accueil</Link>
+                        </Button>
                     </div>
                 </div>
             </nav>

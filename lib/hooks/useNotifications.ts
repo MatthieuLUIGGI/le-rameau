@@ -11,6 +11,8 @@ export interface NotificationItem {
     read_by: string[];
 }
 
+let hasCleanedUpExpired = false;
+
 export function useNotifications(userId?: string | null) {
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -20,6 +22,9 @@ export function useNotifications(userId?: string | null) {
 
         // Nettoyage silencieux des notifications liées aux actualités expirées
         const cleanupExpiredActualitesNotifications = async () => {
+            if (hasCleanedUpExpired) return;
+            hasCleanedUpExpired = true;
+
             try {
                 const now = new Date().toISOString();
                 const { data: expired } = await supabase
