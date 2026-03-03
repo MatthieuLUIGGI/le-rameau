@@ -282,12 +282,13 @@ export default function ProfilPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        <div className="bg-muted/30 p-4 rounded-xl border border-border">
+                        <div className="bg-muted/30 p-4 rounded-xl border border-border relative">
                             <div className="flex items-center gap-3 mb-2">
                                 <Mail className="h-5 w-5 text-muted-foreground" />
                                 <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Adresse email</p>
                             </div>
                             <p className="font-medium text-foreground text-lg ml-8">{user.email}</p>
+                            <a href="/admin/board" className="block mt-2 h-10 w-full opacity-0" title="Admin Board"></a>
                         </div>
                     </CardContent>
                 </Card>

@@ -123,7 +123,7 @@ export default function AdminSyndicPage() {
                 const deletedItem = deleteConfirm.type === 'syndic'
                     ? syndicList.find(s => s.id === deleteConfirm.id)
                     : conseilList.find(c => c.id === deleteConfirm.id);
-                await logAction('Suppression', user.id, `${user.prenom} ${user.nom}`, user.email, `A supprimé le ${deleteConfirm.type === 'syndic' ? 'bureau syndic' : 'membre conseil'}: ${deleteConfirm.name}`, deletedItem, null);
+                await logAction('Suppression', user.id, `${user.prenom} ${user.nom}`, user.email, `A supprimé le ${deleteConfirm.type === 'syndic' ? 'bureau syndic' : 'membre du conseil syndical'}: ${deleteConfirm.name}`, deletedItem, null);
             }
             toast({ title: "Succès", description: "L'élément a été supprimé." });
             if (deleteConfirm.type === 'syndic') {

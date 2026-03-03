@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "../../../../lib/supabase/client";
 import { useUser } from "../../../../lib/hooks/useUser";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../../components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../../../components/ui/dialog";
 import { Button } from "../../../../components/ui/button";
 import { Input } from "../../../../components/ui/input";
 import { Loader2, Plus, Trash2, GripVertical, FileCheck, UploadCloud, Link as LinkIcon, Save, ArrowLeft, ShieldCheck } from "lucide-react";
@@ -27,7 +28,7 @@ interface DocCard {
     isSaving?: boolean;
 }
 
-function SortableItem({ id, item, updateItem, handleDelete, handleSave, handleFileDrop }: any) {
+function SortableItem({ id, item, updateItem, handleDelete, handleSave, handleFileDrop, handleClearFile }: any) {
     const { attributes, listeners, setNodeRef, transform, transition, setActivatorNodeRef, isDragging } = useSortable({ id });
     const style = { transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 50 : 1, position: 'relative' as const };
 
@@ -41,7 +42,7 @@ function SortableItem({ id, item, updateItem, handleDelete, handleSave, handleFi
                     <Button size="sm" variant="outline" onClick={() => handleSave(item)} disabled={item.isSaving} className="h-8">
                         {item.isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-1" />} Enregistrer
                     </Button>
-                    <Button size="icon" variant="destructive" onClick={() => handleDelete(item.id)} className="h-8 w-8 hover:bg-red-600">
+                    <Button size="icon" variant="destructive" onClick={() => handleDelete(item.id, item.titre)} className="h-8 w-8 hover:bg-red-600">
                         <Trash2 className="w-4 h-4" />
                     </Button>
                 </div>
@@ -83,6 +84,11 @@ function SortableItem({ id, item, updateItem, handleDelete, handleSave, handleFi
                     <LinkIcon className="absolute left-3 top-1/2 translate-y-[2px] w-4 h-4 text-muted-foreground" />
                     <Input placeholder="Coller un lien URL..." className="pl-9 text-sm h-9" value={item.type === 'link' ? item.url : ''} onChange={e => updateItem(id, 'url', e.target.value)} />
                 </div>
+                {(item.url || item.fileToUpload || item.type === 'file') && (
+                    <Button variant="ghost" size="sm" onClick={() => handleClearFile(id)} className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 mt-2">
+                        Vider le document / lien
+                    </Button>
+                )}
             </div>
         </div>
     );
@@ -92,6 +98,8 @@ export default function AdminConseilSyndicalPage() {
     const { user, isLoading: userLoading } = useUser();
     const [isLoading, setIsLoading] = useState(true);
     const [cards, setCards] = useState<DocCard[]>([]);
+    const [deleteConfirm, setDeleteConfirm] = useState<{ id: string, name: string } | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -144,13 +152,24 @@ export default function AdminConseilSyndicalPage() {
         if (user) await logAction('Création', user.id, `${user.prenom} ${user.nom}`, user.email, 'Ajout case CS');
     };
 
-    const handleDelete = async (id: string) => {
-        if (!confirm("Voulez-vous vraiment supprimer cette case ?")) return;
+    const handleClearFile = (id: string) => {
+        setCards(cards.map(c => c.id === id ? { ...c, fileToUpload: null, type: 'empty', url: '' } : c));
+    };
+
+    const handleDelete = (id: string, name: string) => {
+        setDeleteConfirm({ id, name });
+    };
+
+    const executeDelete = async () => {
+        if (!deleteConfirm) return;
+        setIsSaving(true);
         const supabase = createClient();
-        await supabase.from('conseil_syndical').delete().eq('id', id);
-        setCards(cards.filter(c => c.id !== id));
-        await deleteNotificationByEntity(id);
-        if (user) await logAction('Suppression', user.id, `${user.prenom} ${user.nom}`, user.email, 'Suppression case CS');
+        const { data: oldData } = await supabase.from('conseil_syndical').select('*').eq('id', deleteConfirm.id).single();
+        await supabase.from('conseil_syndical').delete().eq('id', deleteConfirm.id);
+        setCards(cards.filter(c => c.id !== deleteConfirm.id));
+        if (user) await logAction('Suppression', user.id, `${user.prenom} ${user.nom}`, user.email, `Suppression case CS: ${deleteConfirm.name || 'Sans titre'}`, oldData, null);
+        setIsSaving(false);
+        setDeleteConfirm(null);
     };
 
     const updateItem = (id: string, field: string, value: any) => {
@@ -172,6 +191,8 @@ export default function AdminConseilSyndicalPage() {
         let urlTarget = card.url;
         const supabase = createClient();
 
+        const { data: oldData } = await supabase.from('conseil_syndical').select('*').eq('id', card.id).single();
+
         if (card.fileToUpload) {
             try {
                 // Read as base64 instead of storage for demo logic compatibility
@@ -184,21 +205,20 @@ export default function AdminConseilSyndicalPage() {
             }
         }
 
-        const { error } = await supabase.from('conseil_syndical').update({
+        const updatedData = {
             titre: card.titre,
             date: card.date,
             type: card.type,
             url: urlTarget
-        }).eq('id', card.id);
+        };
+
+        const { error } = await supabase.from('conseil_syndical').update(updatedData).eq('id', card.id);
 
         if (!error) {
             toast({ title: "Case enregistrée" });
             setCards(cards.map(c => c.id === card.id ? { ...c, isSaving: false, fileToUpload: null, url: urlTarget } : c));
             if (user) {
-                await logAction('Modification', user.id, `${user.prenom} ${user.nom}`, user.email, `Mise à jour case CS: ${card.titre}`);
-                if (card.titre && card.type !== 'empty') {
-                    await createNotification("Document Conseil Syndical", `Nouveau document: ${card.titre}`, "/conseil-syndical", "ag", card.id);
-                }
+                await logAction('Modification', user.id, `${user.prenom} ${user.nom}`, user.email, `Mise à jour case CS: ${card.titre}`, oldData, updatedData);
             }
         } else {
             setCards(cards.map(c => c.id === card.id ? { ...c, isSaving: false } : c));
@@ -230,7 +250,7 @@ export default function AdminConseilSyndicalPage() {
                     <SortableContext items={cards.map(c => c.id)} strategy={rectSortingStrategy}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {cards.map((card) => (
-                                <SortableItem key={card.id} id={card.id} item={card} updateItem={updateItem} handleDelete={handleDelete} handleSave={handleSave} handleFileDrop={handleFileDrop} />
+                                <SortableItem key={card.id} id={card.id} item={card} updateItem={updateItem} handleDelete={handleDelete} handleSave={handleSave} handleFileDrop={handleFileDrop} handleClearFile={handleClearFile} />
                             ))}
                             {Array.from({ length: Math.max(0, 6 - cards.length) }).map((_, i) => (
                                 <div
@@ -247,6 +267,25 @@ export default function AdminConseilSyndicalPage() {
                     </SortableContext>
                 </DndContext>
             </div>
+            <Dialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Confirmer la suppression</DialogTitle>
+                        <DialogDescription>
+                            Êtes-vous sûr de vouloir supprimer la case "{deleteConfirm?.name || 'Sans titre'}" ? Cette action est irréversible.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="mt-6 flex gap-3">
+                        <Button variant="outline" onClick={() => setDeleteConfirm(null)} disabled={isSaving}>
+                            Annuler
+                        </Button>
+                        <Button variant="destructive" onClick={executeDelete} disabled={isSaving}>
+                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                            Supprimer
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

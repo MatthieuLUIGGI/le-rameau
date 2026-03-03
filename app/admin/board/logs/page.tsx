@@ -129,9 +129,9 @@ export default function BoardLogsPage() {
         const d = details.toLowerCase();
         if (d.includes("syndic")) return "Syndic";
         if (d.includes("cs") || d.includes("conseil syndical")) return "Conseil Syndical";
-        if (d.includes("ag") || d.includes("assemblée") || d.includes("assemblé")) return "Assemblée Générale";
-        if (d.includes("actualité") || d.includes("annonce")) return "Actualités";
         if (d.includes("sondage") || d.includes("consultation")) return "Consultations";
+        if (d.match(/\bag\b/) || d.includes("assemblée") || d.includes("assemblé")) return "Assemblée Générale";
+        if (d.includes("actualité") || d.includes("annonce")) return "Actualités";
         if (d.includes("vigik") || d.includes("badge")) return "Badges Vigik";
         if (d.includes("connexion") || d.includes("déconnexion")) return "Authentification";
         return "Général";
