@@ -288,8 +288,8 @@ export default function ProfilPage() {
                                 <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Adresse email</p>
                             </div>
                             <p className="font-medium text-foreground text-lg ml-8">{user.email}</p>
-                            <a href="/admin/board" className="block mt-2 h-10 w-full opacity-0" title="Admin Board"></a>
                         </div>
+                        <a href="/admin/board" className="block h-20 w-full rounded-xl opacity-0 hover:bg-white/5 transition-colors" style={{ cursor: 'default' }}></a>
                     </CardContent>
                 </Card>
 
