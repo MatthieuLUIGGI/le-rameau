@@ -6,9 +6,10 @@ import { useUser } from "../../../../lib/hooks/useUser";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../../components/ui/card";
 import { Button } from "../../../../components/ui/button";
 import { Input } from "../../../../components/ui/input";
-import { Loader2, Plus, Trash2, GripVertical, FileCheck, UploadCloud, Link as LinkIcon, Save } from "lucide-react";
+import { Loader2, Plus, Trash2, GripVertical, FileCheck, UploadCloud, Link as LinkIcon, Save, ArrowLeft, ShieldCheck } from "lucide-react";
 import { toast } from "../../../../hooks/use-toast";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { logAction } from "../../../../lib/logger";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -30,7 +31,7 @@ function SortableItem({ id, item, updateItem, handleDelete, handleSave, handleFi
     const style = { transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 50 : 1, position: 'relative' as const };
 
     return (
-        <div ref={setNodeRef} style={style} className={`bg-surface border shadow-sm rounded-xl p-4 flex flex-col gap-4 ${isDragging ? 'opacity-50 shadow-xl border-primary' : ''}`}>
+        <div ref={setNodeRef} style={style} className={`bg-surface border shadow-sm rounded-xl p-3 flex flex-col gap-3 ${isDragging ? 'opacity-50 shadow-xl border-primary' : ''}`}>
             <div className="flex justify-between items-center border-b border-border/50 pb-2">
                 <div ref={setActivatorNodeRef} {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing hover:bg-muted p-1.5 rounded-md transition-colors">
                     <GripVertical className="h-5 w-5 text-muted-foreground" />
@@ -50,7 +51,7 @@ function SortableItem({ id, item, updateItem, handleDelete, handleSave, handleFi
                 <Input type="date" value={item.date} onChange={e => updateItem(id, 'date', e.target.value)} />
 
                 <div
-                    className={`relative border-2 border-dashed rounded-lg p-3 text-center transition-colors flex flex-col items-center justify-center min-h-[5rem] overflow-hidden ${item.type === 'file' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}
+                    className={`relative border-2 border-dashed rounded-lg p-2 text-center transition-colors flex flex-col items-center justify-center min-h-[4rem] overflow-hidden ${item.type === 'file' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}
                     onDragOver={e => e.preventDefault()}
                     onDrop={e => {
                         e.preventDefault();
@@ -107,22 +108,9 @@ export default function AdminConseilSyndicalPage() {
         const supabase = createClient();
         const { data, error } = await supabase.from('conseil_syndical').select('*').order('position', { ascending: true });
 
-        let loadedCards = data ? data.map(d => ({ ...d, fileToUpload: null, isSaving: false })) : [];
-
-        if (loadedCards.length < 6) {
-            const missingCount = 6 - loadedCards.length;
-            const newInserts = Array.from({ length: missingCount }).map((_, i) => ({
-                titre: '', date: '', type: 'empty', url: '', position: loadedCards.length + i
-            }));
-
-            const { data: insertedData, error: insErr } = await supabase.from('conseil_syndical').insert(newInserts).select();
-            if (insertedData) {
-                const newCardsFormatted = insertedData.map(d => ({ ...d, fileToUpload: null, isSaving: false })).sort((a, b) => a.position - b.position);
-                loadedCards = [...loadedCards, ...newCardsFormatted];
-            }
+        if (!error && data) {
+            setCards(data.map(d => ({ ...d, fileToUpload: null, isSaving: false })));
         }
-
-        setCards(loadedCards.sort((a, b) => a.position - b.position));
         setIsLoading(false);
     };
 
@@ -148,9 +136,10 @@ export default function AdminConseilSyndicalPage() {
 
     const addCard = async () => {
         const supabase = createClient();
-        const newPos = cards.length;
+        const minPosition = cards.length > 0 ? Math.min(...cards.map(c => c.position)) : 0;
+        const newPos = minPosition - 1;
         const { data, error } = await supabase.from('conseil_syndical').insert([{ titre: '', date: '', type: 'empty', url: '', position: newPos }]).select().single();
-        if (data) setCards([...cards, { ...data, fileToUpload: null, isSaving: false }]);
+        if (data) setCards([{ ...data, fileToUpload: null, isSaving: false }, ...cards]);
         if (user) await logAction('Création', user.id, `${user.prenom} ${user.nom}`, user.email, 'Ajout case CS');
     };
 
@@ -213,20 +202,21 @@ export default function AdminConseilSyndicalPage() {
     if (isLoading || userLoading) return <div className="flex justify-center p-12 mt-12"><Loader2 className="w-10 h-10 animate-spin text-primary" /></div>;
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6 pb-12 pt-6 px-4">
-            <Card className="shadow-lg border-2 border-primary/10 overflow-hidden relative">
-                <div className="absolute top-0 right-0 p-8 opacity-5"></div>
-                <CardHeader>
-                    <div className="flex justify-between items-center z-10 relative">
-                        <div>
-                            <CardTitle className="text-3xl font-extrabold text-primary">Gestion Conseil Syndical</CardTitle>
-                            <CardDescription className="text-base mt-2 max-w-2xl font-medium">
-                                Ajoutez, renommez, supprimez et <b>réorganisez</b> vos documents du Conseil Syndical comme bon vous semble !
-                            </CardDescription>
-                        </div>
-                    </div>
-                </CardHeader>
-            </Card>
+        <div className="max-w-5xl mx-auto space-y-8 pb-12 pt-6 px-4">
+            <div className="flex items-center justify-between mb-2 flex-wrap gap-4">
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="icon" asChild className="rounded-full">
+                        <Link href="/dashboard"><ArrowLeft className="w-5 h-5" /></Link>
+                    </Button>
+                    <h1 className="text-3xl font-extrabold text-foreground flex items-center gap-3">
+                        <ShieldCheck className="h-8 w-8 text-primary" />
+                        Gestion Conseil
+                    </h1>
+                </div>
+                <Button onClick={addCard} className="font-bold shadow-md rounded-full px-6">
+                    <Plus className="w-5 h-5 mr-2" /> Ajouter une case
+                </Button>
+            </div>
 
             <div className="mt-8">
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -235,14 +225,17 @@ export default function AdminConseilSyndicalPage() {
                             {cards.map((card) => (
                                 <SortableItem key={card.id} id={card.id} item={card} updateItem={updateItem} handleDelete={handleDelete} handleSave={handleSave} handleFileDrop={handleFileDrop} />
                             ))}
-                            <div
-                                onClick={addCard}
-                                className="bg-surface/50 border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/30 cursor-pointer rounded-xl flex items-center justify-center min-h-[300px] transition-all group"
-                            >
-                                <div className="bg-primary/10 text-primary p-4 rounded-full group-hover:scale-110 transition-transform">
-                                    <Plus className="w-8 h-8" />
+                            {Array.from({ length: Math.max(0, 6 - cards.length) }).map((_, i) => (
+                                <div
+                                    key={`empty-${i}`}
+                                    onClick={addCard}
+                                    className="bg-surface/50 border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/30 cursor-pointer rounded-xl flex items-center justify-center min-h-[220px] transition-all group"
+                                >
+                                    <div className="bg-primary/10 text-primary p-4 rounded-full group-hover:scale-110 transition-transform">
+                                        <Plus className="w-8 h-8" />
+                                    </div>
                                 </div>
-                            </div>
+                            ))}
                         </div>
                     </SortableContext>
                 </DndContext>

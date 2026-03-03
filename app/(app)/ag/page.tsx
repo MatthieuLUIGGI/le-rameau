@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
 import { useUser } from "../../../lib/hooks/useUser";
-import { Loader2, FileText, ExternalLink, Calendar as CalendarIcon } from "lucide-react";
+import { Loader2, FileText, ExternalLink, Calendar as CalendarIcon, FileCheck, Link as LinkIcon, Plus } from "lucide-react";
+import { Input } from "../../../components/ui/input";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -43,46 +44,45 @@ export default function AGPage() {
     if (userLoading || isLoadingDocs) return <div className="flex justify-center p-12 mt-12"><Loader2 className="w-10 h-10 animate-spin text-primary" /></div>;
 
     const DocumentCard = ({ box }: { box: DocCard }) => {
-        if (box.type === 'empty') {
-            return (
-                <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-border/50 rounded-2xl bg-muted/5 opacity-50 min-h-[160px]">
-                    <span className="text-sm font-medium text-muted-foreground">{box.titre || "En attente"}</span>
-                </div>
-            );
-        }
-
-        const isLink = box.type === 'link';
-
         return (
-            <a
-                href={box.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group bg-surface hover:bg-muted/30 border border-border p-5 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col gap-3 relative overflow-hidden min-h-[160px]"
-            >
-                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                    {isLink ? <ExternalLink className="w-16 h-16 -mt-2 -mr-2 text-primary" /> : <FileText className="w-16 h-16 -mt-2 -mr-2 text-primary" />}
-                </div>
-
-                <div className="bg-primary/10 w-12 h-12 flex items-center justify-center text-primary rounded-xl mb-1">
-                    {isLink ? <ExternalLink className="w-6 h-6" /> : <FileText className="w-6 h-6" />}
-                </div>
-
-                <div className="space-y-1 relative z-10 w-full mt-auto">
-                    <h3 className="font-bold text-foreground text-lg leading-tight group-hover:text-primary transition-colors">
-                        {box.titre || "Document sans titre"}
+            <div className={`bg-surface border shadow-sm rounded-xl p-5 flex flex-col gap-3 relative hover:shadow-md transition-all ${(box.type === 'link' || box.type === 'file') && box.url ? 'hover:border-primary/50 group' : ''} ${box.type === 'empty' ? 'border-dashed border-border/50 bg-muted/5 opacity-50 min-h-[100px] justify-center items-center' : ''}`}>
+                <div className="space-y-1">
+                    <h3 className={`font-bold text-lg leading-tight transition-colors ${(box.type === 'link' || box.type === 'file') && box.url ? 'group-hover:text-primary' : 'text-foreground'} ${box.type === 'empty' ? 'text-muted-foreground text-center' : ''}`}>
+                        {box.titre || "Sans titre"}
+                        {box.type === 'empty' && !box.titre && "En attente de document"}
+                        {box.type === 'empty' && box.titre && " (En attente de document)"}
                     </h3>
-                    <div className="flex items-center text-sm text-muted-foreground font-medium gap-1.5 pt-1">
-                        <CalendarIcon className="w-4 h-4" />
-                        {box.date ? format(new Date(box.date), "dd MMMM yyyy", { locale: fr }) : "Date non spécifiée"}
-                    </div>
+                    {box.date && (
+                        <div className="flex items-center text-sm text-muted-foreground font-medium gap-1.5 pt-1">
+                            <CalendarIcon className="w-4 h-4" />
+                            {format(new Date(box.date), "dd MMMM yyyy", { locale: fr })}
+                        </div>
+                    )}
                 </div>
-            </a>
+
+                {box.type === 'file' && box.url && (
+                    <div className="mt-auto pt-2">
+                        <div className="inline-flex items-center gap-2 text-sm font-semibold text-blue-500 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg transition-colors w-full justify-center border border-blue-100">
+                            <FileCheck className="w-5 h-5" /> Ouvrir le document
+                        </div>
+                    </div>
+                )}
+
+                {box.type === 'link' && box.url && (
+                    <div className="mt-auto pt-2">
+                        <div className="inline-flex items-center gap-2 text-sm font-semibold text-primary bg-primary/10 hover:bg-primary/20 px-3 py-2 rounded-lg transition-colors w-full justify-center border border-primary/20">
+                            <ExternalLink className="w-5 h-5" /> Consulter le lien
+                        </div>
+                    </div>
+                )}
+
+                {(box.type === 'link' || box.type === 'file') && box.url && <a href={box.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-10 w-full h-full cursor-pointer"></a>}
+            </div>
         );
     };
 
     return (
-        <div className="max-w-7xl mx-auto space-y-8 pb-12 pt-6 px-4">
+        <div className="max-w-5xl mx-auto space-y-8 pb-12 pt-6 px-4">
             <div className="bg-surface p-6 sm:p-10 rounded-3xl border border-border mt-6 shadow-sm text-center relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-primary to-blue-500"></div>
                 <h1 className="text-3xl font-extrabold text-foreground mb-4">Assemblée Générale</h1>
