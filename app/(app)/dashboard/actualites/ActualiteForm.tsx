@@ -188,7 +188,7 @@ export default function ActualiteForm({ initialData }: ActualiteFormProps) {
                         <CardTitle>Médias & Pièces Jointes</CardTitle>
                         <CardDescription>Agrémentez votre article avec des illustrations ou fichiers.</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-6 pt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4">
                             <label className="text-sm font-bold text-foreground flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Image de couverture</label>
                             <div

@@ -50,11 +50,9 @@ export default function ActualitesList() {
 
             let query = supabase.from('actualites').select('*').order('created_at', { ascending: false });
 
-            // Filtre : ne pas récupérer les actualités expirées pour les résidents, mais l'admin (`ag`) les verra.
-            if (user?.role !== 'ag') {
-                const now = new Date().toISOString();
-                query = query.or(`date_expiration.is.null,date_expiration.gt.${now}`);
-            }
+            // Ne jamais récupérer les actualités expirées
+            const now = new Date().toISOString();
+            query = query.or(`date_expiration.is.null,date_expiration.gt.${now}`);
 
             const { data } = await query;
             if (data) {

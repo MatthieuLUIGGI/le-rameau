@@ -6,7 +6,7 @@ import { useUser } from "../../../../lib/hooks/useUser";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../../components/ui/card";
 import { Button } from "../../../../components/ui/button";
 import { Input } from "../../../../components/ui/input";
-import { Building, Save, ArrowLeft, Loader2, Info, Plus, Trash2 } from "lucide-react";
+import { Building, Save, ArrowLeft, Loader2, Info, Plus, Trash2, ImageIcon } from "lucide-react";
 import { toast } from "../../../../hooks/use-toast";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -275,8 +275,37 @@ export default function AdminSyndicPage() {
                                     <Input value={syndic.adresse} onChange={e => handleSyndicChange(syndic.id, 'adresse', e.target.value)} />
                                 </div>
                                 <div className="space-y-2 md:col-span-2">
-                                    <label className="text-sm font-bold text-foreground">URL Photo de couverture (Optionnel)</label>
-                                    <Input value={syndic.photo_url} onChange={e => handleSyndicChange(syndic.id, 'photo_url', e.target.value)} placeholder="https://..." />
+                                    <label className="text-sm font-bold text-foreground">Photo de couverture (Optionnel)</label>
+                                    <div
+                                        onDrop={(e) => {
+                                            e.preventDefault();
+                                            const file = e.dataTransfer.files?.[0];
+                                            if (file && file.type.startsWith('image/')) {
+                                                const reader = new FileReader();
+                                                reader.onload = (event) => handleSyndicChange(syndic.id, 'photo_url', event.target?.result as string);
+                                                reader.readAsDataURL(file);
+                                            }
+                                        }}
+                                        onDragOver={(e) => e.preventDefault()}
+                                        onClick={() => document.getElementById(`syndic-image-${syndic.id}`)?.click()}
+                                        className="border-2 border-dashed border-border rounded-xl p-4 text-center cursor-pointer hover:bg-muted/30 transition-colors"
+                                    >
+                                        {syndic.photo_url ? (
+                                            <img src={syndic.photo_url} alt="Preview" className="w-full h-32 rounded-lg object-cover mb-2" />
+                                        ) : (
+                                            <ImageIcon className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                                        )}
+                                        <p className="text-sm font-medium">Glissez une image ou cliquez</p>
+                                        <input type="file" id={`syndic-image-${syndic.id}`} className="hidden" accept="image/*" onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                const reader = new FileReader();
+                                                reader.onload = (event) => handleSyndicChange(syndic.id, 'photo_url', event.target?.result as string);
+                                                reader.readAsDataURL(file);
+                                            }
+                                        }} />
+                                    </div>
+                                    <Input value={syndic.photo_url || ''} onChange={e => handleSyndicChange(syndic.id, 'photo_url', e.target.value)} placeholder="Ou collez une URL d'image (https://...)" className="mt-2" />
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
@@ -320,8 +349,39 @@ export default function AdminSyndicPage() {
                                         <Input value={membre.batiment} onChange={e => handleConseilChange(membre.id, 'batiment', e.target.value)} placeholder="Ex: Bâtiment A" />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-muted-foreground uppercase">URL Photo</label>
-                                        <Input value={membre.photo_url} onChange={e => handleConseilChange(membre.id, 'photo_url', e.target.value)} placeholder="https://..." />
+                                        <label className="text-xs font-bold text-muted-foreground uppercase">Photo</label>
+                                        <div
+                                            onDrop={(e) => {
+                                                e.preventDefault();
+                                                const file = e.dataTransfer.files?.[0];
+                                                if (file && file.type.startsWith('image/')) {
+                                                    const reader = new FileReader();
+                                                    reader.onload = (event) => handleConseilChange(membre.id, 'photo_url', event.target?.result as string);
+                                                    reader.readAsDataURL(file);
+                                                }
+                                            }}
+                                            onDragOver={(e) => e.preventDefault()}
+                                            onClick={() => document.getElementById(`conseil-image-${membre.id}`)?.click()}
+                                            className="border-2 border-dashed border-border rounded-xl p-2 text-center cursor-pointer hover:bg-muted/30 transition-colors max-h-[120px] flex flex-col items-center justify-center overflow-hidden h-full"
+                                        >
+                                            {membre.photo_url ? (
+                                                <img src={membre.photo_url} alt="Preview" className="max-h-[80px] rounded-md object-cover" />
+                                            ) : (
+                                                <div className="flex flex-col items-center py-2 h-full justify-center">
+                                                    <ImageIcon className="w-5 h-5 text-muted-foreground mb-1" />
+                                                    <p className="text-[10px] text-muted-foreground">Ajouter (glisser ou URL ci-dessous)</p>
+                                                </div>
+                                            )}
+                                            <input type="file" id={`conseil-image-${membre.id}`} className="hidden" accept="image/*" onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    const reader = new FileReader();
+                                                    reader.onload = (event) => handleConseilChange(membre.id, 'photo_url', event.target?.result as string);
+                                                    reader.readAsDataURL(file);
+                                                }
+                                            }} />
+                                        </div>
+                                        <Input value={membre.photo_url || ''} onChange={e => handleConseilChange(membre.id, 'photo_url', e.target.value)} placeholder="URL d'image (optionnel)" className="mt-2 text-xs h-8" />
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 w-full md:w-auto">

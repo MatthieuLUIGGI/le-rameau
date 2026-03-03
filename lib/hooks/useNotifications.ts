@@ -17,6 +17,27 @@ export function useNotifications(userId?: string | null) {
 
     const fetchNotifications = useCallback(async () => {
         const supabase = createClient();
+
+        // Nettoyage silencieux des notifications liées aux actualités expirées
+        const cleanupExpiredActualitesNotifications = async () => {
+            try {
+                const now = new Date().toISOString();
+                const { data: expired } = await supabase
+                    .from('actualites')
+                    .select('id')
+                    .not('date_expiration', 'is', null)
+                    .lt('date_expiration', now);
+
+                if (expired && expired.length > 0) {
+                    const expiredIds = expired.map(e => e.id);
+                    await supabase.from('notifications').delete().in('entity_id', expiredIds);
+                }
+            } catch (e) {
+                console.error("[Cleanup] Failed to clean expired actualites notifications", e);
+            }
+        };
+        cleanupExpiredActualitesNotifications();
+
         const { data, error } = await supabase
             .from('notifications')
             .select('*')

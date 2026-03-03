@@ -11,6 +11,7 @@ import { toast } from "../../../../hooks/use-toast";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { logAction } from "../../../../lib/logger";
+import { createNotification, deleteNotificationByEntity } from "../../../../lib/notifications";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -148,6 +149,7 @@ export default function AdminAGPage() {
         const supabase = createClient();
         await supabase.from('assemblee_generale').delete().eq('id', id);
         setCards(cards.filter(c => c.id !== id));
+        await deleteNotificationByEntity(id);
         if (user) await logAction('Suppression', user.id, `${user.prenom} ${user.nom}`, user.email, 'Suppression case AG');
     };
 
@@ -192,7 +194,12 @@ export default function AdminAGPage() {
         if (!error) {
             toast({ title: "Case enregistrée" });
             setCards(cards.map(c => c.id === card.id ? { ...c, isSaving: false, fileToUpload: null, url: urlTarget } : c));
-            if (user) await logAction('Modification', user.id, `${user.prenom} ${user.nom}`, user.email, `Mise à jour case AG: ${card.titre}`);
+            if (user) {
+                await logAction('Modification', user.id, `${user.prenom} ${user.nom}`, user.email, `Mise à jour case AG: ${card.titre}`);
+                if (card.titre && card.type !== 'empty') {
+                    await createNotification("Document AG", `Nouveau document: ${card.titre}`, "/ag", "ag", card.id);
+                }
+            }
         } else {
             setCards(cards.map(c => c.id === card.id ? { ...c, isSaving: false } : c));
             toast({ title: "Erreur", description: "Sauvegarde impossible", variant: "destructive" });

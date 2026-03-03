@@ -19,7 +19,7 @@ export const registerSchema = z.object({
     batiment: z.string().min(1, { message: "Le bâtiment est obligatoire" }),
     appartement: z.string().min(1, { message: "Le numéro d'appartement est obligatoire" }),
     rgpd: z.literal(true, {
-        errorMap: () => ({ message: "Vous devez accepter les conditions." }),
+        errorMap: () => ({ message: "Veuillez accepter les conditions d'utilisations" })
     } as any),
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Les mots de passe ne correspondent pas",
