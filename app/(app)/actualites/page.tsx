@@ -40,12 +40,12 @@ const mapPrioriteToLabel = (priorite: string) => {
 };
 
 const getCardBorderStyle = (priorite: string, isExpired: boolean) => {
-    if (isExpired) return 'border-2 border-border opacity-50 grayscale';
+    if (isExpired) return 'bg-surface border-2 border-border opacity-50 grayscale';
     switch (priorite) {
-        case 'haute': return 'border-2 border-danger hover:border-danger shadow-[0_0_20px_rgba(239,68,68,0.15)] group-hover:shadow-[0_0_30px_rgba(239,68,68,0.3)] scale-[1.02] group-hover:scale-[1.04]';
-        case 'normale': return 'border-2 border-blue-500 hover:border-blue-400 group-hover:shadow-md';
-        case 'basse': return 'border-2 border-white hover:border-white group-hover:shadow-md';
-        default: return 'border-2 border-border group-hover:border-primary/50 group-hover:shadow-md';
+        case 'haute': return 'bg-danger/10 dark:bg-danger/15 border-2 border-danger hover:border-danger shadow-[0_0_15px_rgba(239,68,68,0.4),0_0_30px_rgba(239,68,68,0.2)] group-hover:shadow-[0_0_25px_rgba(239,68,68,0.6),0_0_50px_rgba(239,68,68,0.3)] scale-[1.02] group-hover:scale-[1.04] transition-all duration-300';
+        case 'normale': return 'bg-blue-500/10 dark:bg-blue-500/15 border-2 border-blue-500 hover:border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3),0_0_30px_rgba(59,130,246,0.15)] group-hover:shadow-[0_0_20px_rgba(59,130,246,0.5),0_0_40px_rgba(59,130,246,0.3)] transition-all duration-300';
+        case 'basse': return 'bg-black/5 dark:bg-white/5 border-2 border-black/80 hover:border-black dark:border-white/80 dark:hover:border-white shadow-[0_0_15px_rgba(0,0,0,0.2),0_0_30px_rgba(0,0,0,0.1)] dark:shadow-[0_0_15px_rgba(255,255,255,0.2),0_0_30px_rgba(255,255,255,0.1)] group-hover:shadow-[0_0_20px_rgba(0,0,0,0.4),0_0_40px_rgba(0,0,0,0.2)] dark:group-hover:shadow-[0_0_20px_rgba(255,255,255,0.4),0_0_40px_rgba(255,255,255,0.2)] transition-all duration-300';
+        default: return 'bg-surface border-2 border-border group-hover:border-primary/50 group-hover:shadow-md';
     }
 };
 
@@ -117,7 +117,7 @@ export default function ActualitesList() {
 
                         return (
                             <Link href={`/actualites/${actu.id}`} key={actu.id} className="block group h-full">
-                                <Card className={`bg-surface shadow-sm transition-all duration-500 cursor-pointer h-full relative overflow-hidden flex flex-col ${getCardBorderStyle(actu.priorite, isExpired ?? false)}`}>
+                                <Card className={`shadow-sm transition-all duration-500 cursor-pointer h-full relative overflow-hidden flex flex-col ${getCardBorderStyle(actu.priorite, isExpired ?? false)}`}>
                                     {isImportant && <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-danger/50 via-danger to-danger/50 animate-pulse z-20"></div>}
 
                                     {actu.image_url ? (
