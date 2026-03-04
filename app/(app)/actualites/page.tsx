@@ -39,6 +39,16 @@ const mapPrioriteToLabel = (priorite: string) => {
     }
 };
 
+const getCardBorderStyle = (priorite: string, isExpired: boolean) => {
+    if (isExpired) return 'border-2 border-border opacity-50 grayscale';
+    switch (priorite) {
+        case 'haute': return 'border-2 border-danger hover:border-danger shadow-[0_0_20px_rgba(239,68,68,0.15)] group-hover:shadow-[0_0_30px_rgba(239,68,68,0.3)] scale-[1.02] group-hover:scale-[1.04]';
+        case 'normale': return 'border-2 border-blue-500 hover:border-blue-400 group-hover:shadow-md';
+        case 'basse': return 'border-2 border-white hover:border-white group-hover:shadow-md';
+        default: return 'border-2 border-border group-hover:border-primary/50 group-hover:shadow-md';
+    }
+};
+
 export default function ActualitesList() {
     const { user } = useUser();
     const [actualites, setActualites] = useState<Actualite[]>([]);
@@ -102,12 +112,12 @@ export default function ActualitesList() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {actualites.map((actu) => {
-                        const isExpired = actu.date_expiration && new Date(actu.date_expiration) < new Date();
+                        const isExpired = !!actu.date_expiration && new Date(actu.date_expiration) < new Date();
                         const isImportant = actu.priorite === 'haute' && !isExpired;
 
                         return (
                             <Link href={`/actualites/${actu.id}`} key={actu.id} className="block group h-full">
-                                <Card className={`bg-surface border-border shadow-sm transition-all duration-500 cursor-pointer h-full relative overflow-hidden flex flex-col ${isExpired ? 'opacity-50 grayscale' : ''} ${isImportant ? 'border-danger/50 shadow-[0_0_20px_rgba(239,68,68,0.15)] group-hover:shadow-[0_0_30px_rgba(239,68,68,0.3)] group-hover:border-danger scale-[1.02] group-hover:scale-[1.04]' : 'group-hover:shadow-md group-hover:border-primary/50'}`}>
+                                <Card className={`bg-surface shadow-sm transition-all duration-500 cursor-pointer h-full relative overflow-hidden flex flex-col ${getCardBorderStyle(actu.priorite, isExpired ?? false)}`}>
                                     {isImportant && <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-danger/50 via-danger to-danger/50 animate-pulse z-20"></div>}
 
                                     {actu.image_url ? (
