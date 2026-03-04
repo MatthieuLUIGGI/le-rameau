@@ -322,7 +322,7 @@ export default function AdminSyndicPage() {
                                         className="border-2 border-dashed border-border rounded-xl p-4 text-center cursor-pointer hover:bg-muted/30 transition-colors"
                                     >
                                         {syndic.photo_url ? (
-                                            <img src={syndic.photo_url} alt="Preview" className="w-full h-32 rounded-lg object-cover mb-2" />
+                                            <img src={syndic.photo_url} alt="Preview" className="w-auto h-48 md:h-64 aspect-[3/4] rounded-lg object-cover mx-auto mb-2 shadow-sm border border-border/50" />
                                         ) : (
                                             <ImageIcon className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
                                         )}
@@ -476,7 +476,7 @@ export default function AdminSyndicPage() {
                                 image={currentCropImage}
                                 crop={crop}
                                 zoom={zoom}
-                                aspect={4 / 3}
+                                aspect={3 / 4}
                                 onCropChange={setCrop}
                                 onCropComplete={onCropComplete}
                                 onZoomChange={setZoom}
