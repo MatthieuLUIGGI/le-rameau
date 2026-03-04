@@ -6,7 +6,7 @@ import { useUser } from "../../../../lib/hooks/useUser";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../../components/ui/card";
 import { Button } from "../../../../components/ui/button";
 import { Input } from "../../../../components/ui/input";
-import { Building, Save, ArrowLeft, Loader2, Info, Plus, Trash2, ImageIcon } from "lucide-react";
+import { Building, Save, ArrowLeft, Loader2, Info, Plus, Trash2, ImageIcon, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "../../../../hooks/use-toast";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -34,6 +34,7 @@ interface ConseilSyndical {
     nom: string;
     batiment: string;
     photo_url: string;
+    ordre?: number;
 }
 
 export default function AdminSyndicPage() {
@@ -54,7 +55,7 @@ export default function AdminSyndicPage() {
         const supabase = createClient();
         const [resSyndic, resConseil] = await Promise.all([
             supabase.from('syndic').select('*').order('updated_at', { ascending: true }),
-            supabase.from('membres_conseil_syndical').select('*').order('batiment')
+            supabase.from('membres_conseil_syndical').select('*').order('ordre', { ascending: true }).order('batiment')
         ]);
 
         if (resSyndic.data) setSyndicList(resSyndic.data as Syndic[]);
@@ -74,9 +75,10 @@ export default function AdminSyndicPage() {
     };
 
     const handleAddConseil = () => {
+        const maxOrdre = conseilList.length > 0 ? Math.max(...conseilList.map(c => c.ordre || 0)) : 0;
         setConseilList([
             ...conseilList,
-            { id: "new-" + Date.now(), nom: "", batiment: "Bâtiment A", photo_url: "" }
+            { id: "new-" + Date.now(), nom: "", batiment: "Bâtiment A", photo_url: "", ordre: maxOrdre + 1 }
         ]);
     };
 
@@ -91,6 +93,38 @@ export default function AdminSyndicPage() {
 
     const handleConseilChange = (id: string, field: string, value: string) => {
         setConseilList(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
+    };
+
+    const saveConseilOrder = async (newList: ConseilSyndical[]) => {
+        const supabase = createClient();
+        const updates = newList.filter(c => !c.id.startsWith('new-'));
+        try {
+            await Promise.all(
+                updates.map(c =>
+                    supabase.from('membres_conseil_syndical').update({ ordre: c.ordre }).eq('id', c.id)
+                )
+            );
+        } catch (e) {
+            console.error("Erreur lors de la sauvegarde de l'ordre :", e);
+        }
+    };
+
+    const moveConseilUp = (index: number) => {
+        if (index === 0) return;
+        const newList = [...conseilList];
+        [newList[index - 1], newList[index]] = [newList[index], newList[index - 1]];
+        newList.forEach((c, i) => c.ordre = i + 1);
+        setConseilList(newList);
+        saveConseilOrder(newList);
+    };
+
+    const moveConseilDown = (index: number) => {
+        if (index === conseilList.length - 1) return;
+        const newList = [...conseilList];
+        [newList[index + 1], newList[index]] = [newList[index], newList[index + 1]];
+        newList.forEach((c, i) => c.ordre = i + 1);
+        setConseilList(newList);
+        saveConseilOrder(newList);
     };
 
     const [cropModalOpen, setCropModalOpen] = useState(false);
@@ -371,9 +405,18 @@ export default function AdminSyndicPage() {
                 </div>
 
                 <div className="space-y-4">
-                    {conseilList.map((membre) => (
+                    {conseilList.map((membre, index) => (
                         <Card key={membre.id} className="bg-surface border-border shadow-sm">
                             <CardContent className="p-4 sm:p-6 flex flex-col md:flex-row items-start md:items-end gap-4">
+                                <div className="flex flex-row md:flex-col gap-1 items-center justify-center md:pb-6 self-start md:self-auto">
+                                    <Button variant="ghost" size="icon" onClick={() => moveConseilUp(index)} disabled={index === 0 || isSaving} className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors">
+                                        <ArrowUp className="w-5 h-5" />
+                                    </Button>
+                                    <span className="text-xs font-black text-muted-foreground w-6 text-center bg-muted rounded-full py-0.5">{index + 1}</span>
+                                    <Button variant="ghost" size="icon" onClick={() => moveConseilDown(index)} disabled={index === conseilList.length - 1 || isSaving} className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors">
+                                        <ArrowDown className="w-5 h-5" />
+                                    </Button>
+                                </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 flex-1 w-full">
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-muted-foreground uppercase">Prénom & Nom</label>

@@ -39,7 +39,7 @@ export default function SyndicPage() {
             if (syndicData) setSyndicList(syndicData as Syndic[]);
 
             // Fetch Niveau 2 : Conseil Syndical
-            const { data: conseilData } = await supabase.from('membres_conseil_syndical').select('*').order('batiment');
+            const { data: conseilData } = await supabase.from('membres_conseil_syndical').select('*').order('ordre', { ascending: true }).order('batiment');
             if (conseilData) setConseil(conseilData as ConseilSyndical[]);
 
             setIsLoading(false);
