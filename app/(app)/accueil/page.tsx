@@ -14,7 +14,7 @@ export default function DashboardPage() {
     const today = new Date();
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500 relative min-h-[80vh] flex flex-col">
+        <div className="space-y-6 animate-in fade-in duration-500 relative min-h-[calc(100vh-140px)] flex flex-col pb-4 lg:pb-0">
             <div>
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 relative z-10 w-full mb-6">
                     <div>
@@ -59,7 +59,7 @@ export default function DashboardPage() {
                     <h2 className="text-2xl font-bold mb-1">Accès rapides</h2>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10 w-full">
                     {/* Card 1: Actualités */}
                     <Link href="/actualites" className="group flex flex-col p-4 bg-surface/80 backdrop-blur-md border border-border shadow-sm hover:shadow-md hover:-translate-y-1 rounded-xl transition-all duration-300 hover:border-primary/50">
                         <div className="bg-primary/10 w-10 h-10 rounded-lg flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
@@ -69,13 +69,13 @@ export default function DashboardPage() {
                         <p className="text-xs text-muted-foreground leading-relaxed">Restez informé des dernières nouvelles de la copropriété</p>
                     </Link>
 
-                    {/* Card 2: Conseil Syndical */}
-                    <Link href="/conseil-syndical" className="group flex flex-col p-4 bg-surface/80 backdrop-blur-md border border-border shadow-sm hover:shadow-md hover:-translate-y-1 rounded-xl transition-all duration-300 hover:border-blue-500/50">
+                    {/* Card 2: Syndic */}
+                    <Link href="/syndic" className="group flex flex-col p-4 bg-surface/80 backdrop-blur-md border border-border shadow-sm hover:shadow-md hover:-translate-y-1 rounded-xl transition-all duration-300 hover:border-blue-500/50">
                         <div className="bg-blue-500/10 w-10 h-10 rounded-lg flex items-center justify-center mb-3 group-hover:bg-blue-500/20 transition-colors">
                             <Users className="h-5 w-5 text-blue-500" />
                         </div>
-                        <h3 className="text-base font-bold mb-1 group-hover:text-blue-500 transition-colors">Conseil Syndical</h3>
-                        <p className="text-xs text-muted-foreground leading-relaxed">Membres du conseil syndical et le syndic</p>
+                        <h3 className="text-base font-bold mb-1 group-hover:text-blue-500 transition-colors">Syndic</h3>
+                        <p className="text-xs text-muted-foreground leading-relaxed">Gestion syndicale et contacts utiles</p>
                     </Link>
 
                     {/* Card 3: Badges Vigik */}
@@ -103,15 +103,6 @@ export default function DashboardPage() {
                         </div>
                         <h3 className="text-base font-bold mb-1 group-hover:text-pink-500 transition-colors">Consultations</h3>
                         <p className="text-xs text-muted-foreground leading-relaxed">Participez aux consultations et exprimez votre opinion</p>
-                    </Link>
-
-                    {/* Card 6: Contactez-nous */}
-                    <Link href="/contactez-nous" className="group flex flex-col p-4 bg-surface/80 backdrop-blur-md border border-border shadow-sm hover:shadow-md hover:-translate-y-1 rounded-xl transition-all duration-300 hover:border-teal-500/50">
-                        <div className="bg-teal-500/10 w-10 h-10 rounded-lg flex items-center justify-center mb-3 group-hover:bg-teal-500/20 transition-colors">
-                            <Mail className="h-5 w-5 text-teal-500" />
-                        </div>
-                        <h3 className="text-base font-bold mb-1 group-hover:text-teal-500 transition-colors">Contactez-nous</h3>
-                        <p className="text-xs text-muted-foreground leading-relaxed">Contactez-nous directement</p>
                     </Link>
                 </div>
             </div>

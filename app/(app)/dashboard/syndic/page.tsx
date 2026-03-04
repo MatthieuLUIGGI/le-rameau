@@ -224,7 +224,7 @@ export default function AdminSyndicPage() {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <Info className="w-5 h-5 text-primary" />
-                        <h2 className="text-2xl font-bold">Niveau 1 : Le Bureau</h2>
+                        <h2 className="text-2xl font-bold">Niveau 1 : Le Syndic</h2>
                     </div>
                 </div>
 

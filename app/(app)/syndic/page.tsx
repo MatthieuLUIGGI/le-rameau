@@ -67,11 +67,11 @@ export default function SyndicPage() {
                     <div className="relative">
                         <div className="flex flex-col items-center">
                             <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-bold tracking-widest uppercase mb-4 shadow-sm relative z-10">
-                                Niveau 1 : Le Bureau
+                                Niveau 1 : Le Syndic
                             </span>
 
                             {syndicList.length > 0 ? syndicList.map((syndic, idx) => (
-                                <Card key={idx} className="w-full max-w-3xl bg-surface border-primary/20 shadow-xl overflow-hidden relative z-10 mb-8">
+                                <Card key={idx} className="w-full max-w-4xl bg-surface border-primary/20 shadow-xl overflow-hidden relative z-10 mb-8">
                                     <div className="md:flex">
                                         <div className="md:w-1/3 bg-muted relative h-48 md:h-auto overflow-hidden">
                                             {syndic.photo_url ? (
