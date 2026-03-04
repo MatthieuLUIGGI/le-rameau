@@ -12,6 +12,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../../../components/ui/dialog";
 import { logAction } from "../../../../lib/logger";
+import Cropper from 'react-easy-crop';
+import { getCroppedImg } from '../../../../lib/cropImage';
 
 interface Syndic {
     id: string;
@@ -89,6 +91,31 @@ export default function AdminSyndicPage() {
 
     const handleConseilChange = (id: string, field: string, value: string) => {
         setConseilList(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
+    };
+
+    const [cropModalOpen, setCropModalOpen] = useState(false);
+    const [currentCropImage, setCurrentCropImage] = useState<string | null>(null);
+    const [currentCropSyndicId, setCurrentCropSyndicId] = useState<string | null>(null);
+    const [crop, setCrop] = useState({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+
+    const onCropComplete = (croppedArea: any, croppedAreaPixels: any) => {
+        setCroppedAreaPixels(croppedAreaPixels);
+    };
+
+    const handleCropSave = async () => {
+        if (!currentCropImage || !croppedAreaPixels || !currentCropSyndicId) return;
+        try {
+            const croppedImage = await getCroppedImg(currentCropImage, croppedAreaPixels);
+            handleSyndicChange(currentCropSyndicId, 'photo_url', croppedImage);
+            setCropModalOpen(false);
+            setCurrentCropImage(null);
+            setCurrentCropSyndicId(null);
+        } catch (e) {
+            console.error(e);
+            toast({ title: "Erreur", description: "Impossible de rogner l'image", variant: "destructive" });
+        }
     };
 
     const [deleteConfirm, setDeleteConfirm] = useState<{ id: string, type: 'syndic' | 'conseil', name: string } | null>(null);
@@ -282,7 +309,11 @@ export default function AdminSyndicPage() {
                                             const file = e.dataTransfer.files?.[0];
                                             if (file && file.type.startsWith('image/')) {
                                                 const reader = new FileReader();
-                                                reader.onload = (event) => handleSyndicChange(syndic.id, 'photo_url', event.target?.result as string);
+                                                reader.onload = (event) => {
+                                                    setCurrentCropImage(event.target?.result as string);
+                                                    setCurrentCropSyndicId(syndic.id);
+                                                    setCropModalOpen(true);
+                                                };
                                                 reader.readAsDataURL(file);
                                             }
                                         }}
@@ -300,7 +331,11 @@ export default function AdminSyndicPage() {
                                             const file = e.target.files?.[0];
                                             if (file) {
                                                 const reader = new FileReader();
-                                                reader.onload = (event) => handleSyndicChange(syndic.id, 'photo_url', event.target?.result as string);
+                                                reader.onload = (event) => {
+                                                    setCurrentCropImage(event.target?.result as string);
+                                                    setCurrentCropSyndicId(syndic.id);
+                                                    setCropModalOpen(true);
+                                                };
                                                 reader.readAsDataURL(file);
                                             }
                                         }} />
@@ -421,6 +456,55 @@ export default function AdminSyndicPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+            <Dialog open={cropModalOpen} onOpenChange={(open) => {
+                if (!open) {
+                    setCropModalOpen(false);
+                    setCurrentCropImage(null);
+                    setCurrentCropSyndicId(null);
+                }
+            }}>
+                <DialogContent className="sm:max-w-xl">
+                    <DialogHeader>
+                        <DialogTitle>Recadrer l'image de couverture</DialogTitle>
+                        <DialogDescription>
+                            Ajustez l'image (déplacement et zoom) pour sélectionner la partie à afficher.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="relative w-full h-[300px] sm:h-[400px] bg-muted/30 rounded-lg overflow-hidden mt-4">
+                        {currentCropImage && (
+                            <Cropper
+                                image={currentCropImage}
+                                crop={crop}
+                                zoom={zoom}
+                                aspect={4 / 3}
+                                onCropChange={setCrop}
+                                onCropComplete={onCropComplete}
+                                onZoomChange={setZoom}
+                            />
+                        )}
+                    </div>
+                    <div className="mt-4 flex items-center gap-4 px-2">
+                        <span className="text-sm font-bold text-muted-foreground w-12">Zoom</span>
+                        <input
+                            type="range"
+                            value={zoom}
+                            min={1}
+                            max={3}
+                            step={0.1}
+                            onChange={(e) => setZoom(Number(e.target.value))}
+                            className="flex-1 accent-primary"
+                        />
+                    </div>
+                    <DialogFooter className="mt-6">
+                        <Button variant="outline" onClick={() => setCropModalOpen(false)}>Annuler</Button>
+                        <Button onClick={handleCropSave}>
+                            <Save className="w-4 h-4 mr-2" />
+                            Valider le recadrage
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
         </div>
     );
 }
