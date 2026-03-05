@@ -96,7 +96,16 @@ export default function DashboardPage() {
                         <p className="text-xs text-muted-foreground leading-relaxed">Accédez aux comptes rendus des assemblées générales</p>
                     </Link>
 
-                    {/* Card 5: Consultations */}
+                    {/* Card 5: Conseil Syndical */}
+                    <Link href="/conseil-syndical" className="group flex flex-col p-4 bg-surface/80 backdrop-blur-md border border-border shadow-sm hover:shadow-md hover:-translate-y-1 rounded-xl transition-all duration-300 hover:border-emerald-500/50">
+                        <div className="bg-emerald-500/10 w-10 h-10 rounded-lg flex items-center justify-center mb-3 group-hover:bg-emerald-500/20 transition-colors">
+                            <Users className="h-5 w-5 text-emerald-500" />
+                        </div>
+                        <h3 className="text-base font-bold mb-1 group-hover:text-emerald-500 transition-colors">Conseil Syndical</h3>
+                        <p className="text-xs text-muted-foreground leading-relaxed">Informations et comptes rendus du conseil syndical</p>
+                    </Link>
+
+                    {/* Card 6: Consultations */}
                     <Link href="/consultations" className="group flex flex-col p-4 bg-surface/80 backdrop-blur-md border border-border shadow-sm hover:shadow-md hover:-translate-y-1 rounded-xl transition-all duration-300 hover:border-pink-500/50">
                         <div className="bg-pink-500/10 w-10 h-10 rounded-lg flex items-center justify-center mb-3 group-hover:bg-pink-500/20 transition-colors">
                             <MessageSquare className="h-5 w-5 text-pink-500" />

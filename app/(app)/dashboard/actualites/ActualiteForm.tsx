@@ -227,12 +227,12 @@ export default function ActualiteForm({ initialData }: ActualiteFormProps) {
                             <p className="text-xs text-muted-foreground">URL d'une image en grand format .jpg ou .png</p>
                         </div>
                         <div className="space-y-4">
-                            <label className="text-sm font-bold text-foreground flex items-center gap-2"><FileText className="w-4 h-4" /> Fichier PDF joint</label>
+                            <label className="text-sm font-bold text-foreground flex items-center gap-2"><FileText className="w-4 h-4" /> Fichier joint (PDF, Word, Excel...)</label>
                             <div
                                 onDrop={(e) => {
                                     e.preventDefault();
                                     const file = e.dataTransfer.files?.[0];
-                                    if (file && file.type === 'application/pdf') {
+                                    if (file && (file.type.includes('pdf') || file.type.includes('word') || file.type.includes('excel') || file.type.includes('spreadsheet') || file.type.includes('officedocument') || file.name.match(/\.(doc|docx|xls|xlsx|pdf)$/i))) {
                                         const reader = new FileReader();
                                         reader.onload = (event) => setFormData(prev => ({ ...prev, pdf_url: event.target?.result as string }));
                                         reader.readAsDataURL(file);
@@ -244,14 +244,14 @@ export default function ActualiteForm({ initialData }: ActualiteFormProps) {
                             >
                                 {formData.pdf_url ? (
                                     <div className="bg-primary/10 text-primary font-semibold rounded-lg p-3 mb-2 flex items-center justify-center">
-                                        <FileText className="w-6 h-6 mr-2" /> PDF enregistré
+                                        <FileText className="w-6 h-6 mr-2" /> Fichier enregistré
                                     </div>
                                 ) : (
                                     <FileText className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
                                 )}
-                                <p className="text-sm font-medium">Glissez un PDF ou cliquez</p>
+                                <p className="text-sm font-medium">Glissez un fichier ou cliquez</p>
                                 <p className="text-xs text-muted-foreground mt-1 text-center">Ou collez une URL ci-dessous</p>
-                                <input type="file" id="pdf-upload" className="hidden" accept="application/pdf" onChange={(e) => {
+                                <input type="file" id="pdf-upload" className="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx" onChange={(e) => {
                                     const file = e.target.files?.[0];
                                     if (file) {
                                         const reader = new FileReader();
