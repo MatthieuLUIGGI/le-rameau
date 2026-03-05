@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { logAction } from "../../../../lib/logger";
 import Cropper from 'react-easy-crop';
 import { getCroppedImg } from '../../../../lib/cropImage';
+import { compressImage } from "../../../../lib/compressImage";
 
 interface Syndic {
     id: string;
@@ -342,13 +343,11 @@ export default function AdminSyndicPage() {
                                             e.preventDefault();
                                             const file = e.dataTransfer.files?.[0];
                                             if (file && file.type.startsWith('image/')) {
-                                                const reader = new FileReader();
-                                                reader.onload = (event) => {
-                                                    setCurrentCropImage(event.target?.result as string);
+                                                compressImage(file, 1200, 1600, 0.85).then((compressedUrl) => {
+                                                    setCurrentCropImage(compressedUrl);
                                                     setCurrentCropSyndicId(syndic.id);
                                                     setCropModalOpen(true);
-                                                };
-                                                reader.readAsDataURL(file);
+                                                });
                                             }
                                         }}
                                         onDragOver={(e) => e.preventDefault()}
@@ -364,13 +363,11 @@ export default function AdminSyndicPage() {
                                         <input type="file" id={`syndic-image-${syndic.id}`} className="hidden" accept="image/*" onChange={(e) => {
                                             const file = e.target.files?.[0];
                                             if (file) {
-                                                const reader = new FileReader();
-                                                reader.onload = (event) => {
-                                                    setCurrentCropImage(event.target?.result as string);
+                                                compressImage(file, 1200, 1600, 0.85).then((compressedUrl) => {
+                                                    setCurrentCropImage(compressedUrl);
                                                     setCurrentCropSyndicId(syndic.id);
                                                     setCropModalOpen(true);
-                                                };
-                                                reader.readAsDataURL(file);
+                                                });
                                             }
                                         }} />
                                     </div>
@@ -433,9 +430,9 @@ export default function AdminSyndicPage() {
                                                 e.preventDefault();
                                                 const file = e.dataTransfer.files?.[0];
                                                 if (file && file.type.startsWith('image/')) {
-                                                    const reader = new FileReader();
-                                                    reader.onload = (event) => handleConseilChange(membre.id, 'photo_url', event.target?.result as string);
-                                                    reader.readAsDataURL(file);
+                                                    compressImage(file, 400, 400, 0.8).then((compressedUrl) => {
+                                                        handleConseilChange(membre.id, 'photo_url', compressedUrl);
+                                                    });
                                                 }
                                             }}
                                             onDragOver={(e) => e.preventDefault()}
@@ -453,9 +450,9 @@ export default function AdminSyndicPage() {
                                             <input type="file" id={`conseil-image-${membre.id}`} className="hidden" accept="image/*" onChange={(e) => {
                                                 const file = e.target.files?.[0];
                                                 if (file) {
-                                                    const reader = new FileReader();
-                                                    reader.onload = (event) => handleConseilChange(membre.id, 'photo_url', event.target?.result as string);
-                                                    reader.readAsDataURL(file);
+                                                    compressImage(file, 400, 400, 0.8).then((compressedUrl) => {
+                                                        handleConseilChange(membre.id, 'photo_url', compressedUrl);
+                                                    });
                                                 }
                                             }} />
                                         </div>
