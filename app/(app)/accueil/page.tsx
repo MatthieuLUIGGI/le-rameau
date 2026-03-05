@@ -29,7 +29,7 @@ export default function DashboardPage() {
     return (
         <div className="space-y-6 animate-in fade-in duration-500 relative min-h-[calc(100vh-140px)] flex flex-col pb-4 lg:pb-0">
             {/* Spline 3D Background */}
-            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none rounded-3xl" style={{ opacity: 0.85, maskImage: 'linear-gradient(to bottom, black 60%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black 60%, transparent 100%)' }}>
+            <div className="fixed inset-0 w-[100vw] h-[100vh] z-0 overflow-hidden pointer-events-none">
                 {mounted && <Spline scene={splineUrl} />}
             </div>
 

@@ -72,7 +72,7 @@ export function Sidebar() {
     };
 
     return (
-        <div className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-surface border-r border-border">
+        <div className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 z-40 bg-surface border-r border-border">
             <div className="flex-1 flex flex-col min-h-0 pt-5 pb-4">
                 <div className="flex items-center flex-shrink-0 px-6 font-bold text-2xl text-primary gap-2">
                     <Building2 className="h-8 w-8 text-primary" />
