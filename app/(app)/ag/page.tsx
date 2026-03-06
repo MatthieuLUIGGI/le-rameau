@@ -7,6 +7,7 @@ import { Loader2, FileText, ExternalLink, Calendar as CalendarIcon, FileCheck, L
 import { Input } from "../../../components/ui/input";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { openBase64Pdf } from "../../../lib/utils";
 
 interface DocCard {
     id: string;
@@ -76,7 +77,12 @@ export default function AGPage() {
                     </div>
                 )}
 
-                {(box.type === 'link' || box.type === 'file') && box.url && <a href={box.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-10 w-full h-full cursor-pointer"></a>}
+                {(box.type === 'link' || box.type === 'file') && box.url && (
+                    <div
+                        onClick={() => box.type === 'file' ? openBase64Pdf(box.url) : window.open(box.url, "_blank", "noopener,noreferrer")}
+                        className="absolute inset-0 z-10 w-full h-full cursor-pointer"
+                    ></div>
+                )}
             </div>
         );
     };

@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useParams, redirect } from "next/navigation";
 import { Card } from "../../../../components/ui/card";
 import { useUser } from "../../../../lib/hooks/useUser";
+import { openBase64Pdf } from "../../../../lib/utils";
 
 interface Actualite {
     id: string;
@@ -122,7 +123,10 @@ export default function ActualitePage() {
                 {actu.pdf_url && (
                     <Card className="bg-primary/5 border-primary/20 mt-12 shadow-sm relative overflow-hidden group hover:border-primary/40 transition-colors">
                         <div className="absolute top-0 left-0 w-2 h-full bg-primary"></div>
-                        <a href={actu.pdf_url} target="_blank" rel="noopener noreferrer" className="p-6 flex items-center justify-between">
+                        <div
+                            onClick={() => openBase64Pdf(actu.pdf_url)}
+                            className="p-6 flex items-center justify-between cursor-pointer"
+                        >
                             <div className="flex items-center gap-4">
                                 <div className="p-3 bg-primary/10 rounded-xl text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                                     <FileDown className="w-8 h-8" />
@@ -133,7 +137,7 @@ export default function ActualitePage() {
                                 </div>
                             </div>
                             <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors md:block hidden" />
-                        </a>
+                        </div>
                     </Card>
                 )}
             </div>
