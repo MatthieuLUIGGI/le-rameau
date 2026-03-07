@@ -23,8 +23,8 @@ export default function DashboardPage() {
     }, []);
 
     const splineUrl = mounted && resolvedTheme === "dark"
-        ? "https://prod.spline.design/CUAqNid-vBww2Hf1/scene.splinecode"
-        : "https://prod.spline.design/y0HGR9aPW5BEMAf7/scene.splinecode";
+        ? "https://prod.spline.design/he6IR755YQ9q4OHw/scene.splinecode"
+        : "https://prod.spline.design/yWpujGvHRy0BxfVy/scene.splinecode";
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500 relative min-h-[calc(100vh-140px)] flex flex-col pb-4 lg:pb-0">
