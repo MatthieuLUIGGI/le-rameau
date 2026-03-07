@@ -8,13 +8,14 @@ import { Input } from "../../../../components/ui/input";
 import { Textarea } from "../../../../components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../../components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../../components/ui/select";
-import { Loader2, Save, ArrowLeft, Image as ImageIcon, FileText, Calendar } from "lucide-react";
+import { Loader2, Save, ArrowLeft, Image as ImageIcon, FileText, Calendar, CheckCircle2 } from "lucide-react";
 import { toast } from "../../../../hooks/use-toast";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { logAction } from "../../../../lib/logger";
 import { createNotification } from "../../../../lib/notifications";
 import { useUser } from "../../../../lib/hooks/useUser";
+import { compressImage } from "../../../../lib/compressImage";
 import 'react-quill/dist/quill.snow.css';
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false, loading: () => <div className="h-64 flex mt-2 border border-border items-center justify-center bg-muted/20 animate-pulse rounded-md">Chargement Éditeur...</div> });
@@ -36,6 +37,7 @@ export default function ActualiteForm({ initialData }: ActualiteFormProps) {
     const router = useRouter();
     const { user } = useUser();
     const [isSaving, setIsSaving] = useState(false);
+    const [imageStats, setImageStats] = useState<{ orig: number, comp: number } | null>(null);
     const [formData, setFormData] = useState({
         titre: "",
         extrait: "",
@@ -66,6 +68,36 @@ export default function ActualiteForm({ initialData }: ActualiteFormProps) {
 
     const handleContentChange = (content: string) => {
         setFormData(prev => ({ ...prev, contenu: content }));
+    };
+
+    const handleImageFile = async (file: File) => {
+        if (!file || !file.type.startsWith('image/')) return;
+
+        try {
+            const originalSize = file.size;
+
+            // Compression : resizes to max 1200x1200, 85% quality JPG
+            const compressedBase64 = await compressImage(file, 1200, 1200, 0.85);
+
+            // Estimate base64 actual size in bytes (approx 3/4 of length minus prefix)
+            const prefixIndex = compressedBase64.indexOf(',') + 1;
+            const sizeWithoutPrefix = compressedBase64.length - prefixIndex;
+            const compressedSize = Math.round(sizeWithoutPrefix * 0.75);
+
+            setFormData(prev => ({ ...prev, image_url: compressedBase64 }));
+            setImageStats({ orig: originalSize, comp: compressedSize });
+
+            toast({ title: "Image optimisée", description: "L'image a été compressée pour accélérer le site.", variant: "default" });
+        } catch (error) {
+            console.error("Erreur de compression:", error);
+            toast({ title: "Erreur", description: "Impossible de compresser l'image.", variant: "destructive" });
+        }
+    };
+
+    const formatSize = (bytes: number) => {
+        if (bytes < 1024) return bytes + " octets";
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " Ko";
+        return (bytes / (1024 * 1024)).toFixed(2) + " Mo";
     };
 
     const handleSave = async (e: React.FormEvent) => {
@@ -195,11 +227,7 @@ export default function ActualiteForm({ initialData }: ActualiteFormProps) {
                                 onDrop={(e) => {
                                     e.preventDefault();
                                     const file = e.dataTransfer.files?.[0];
-                                    if (file && file.type.startsWith('image/')) {
-                                        const reader = new FileReader();
-                                        reader.onload = (event) => setFormData(prev => ({ ...prev, image_url: event.target?.result as string }));
-                                        reader.readAsDataURL(file);
-                                    }
+                                    if (file) handleImageFile(file);
                                 }}
                                 onDragOver={(e) => e.preventDefault()}
                                 onClick={() => document.getElementById('image-upload')?.click()}
@@ -216,14 +244,28 @@ export default function ActualiteForm({ initialData }: ActualiteFormProps) {
                                 <p className="text-xs text-muted-foreground mt-1 text-center">Ou collez une URL ci-dessous</p>
                                 <input type="file" id="image-upload" className="hidden" accept="image/*" onChange={(e) => {
                                     const file = e.target.files?.[0];
-                                    if (file) {
-                                        const reader = new FileReader();
-                                        reader.onload = (event) => setFormData(prev => ({ ...prev, image_url: event.target?.result as string }));
-                                        reader.readAsDataURL(file);
-                                    }
+                                    if (file) handleImageFile(file);
                                 }} />
                             </div>
-                            <Input placeholder="https://..." name="image_url" value={formData.image_url} onChange={handleChange} />
+
+                            {imageStats && formData.image_url.startsWith('data:') && (
+                                <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 relative !mt-2">
+                                    <div className="flex items-start gap-3">
+                                        <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                                        <div className="text-sm w-full">
+                                            <p className="font-semibold text-primary">Image optimisée</p>
+                                            <div className="flex justify-between items-center text-xs mt-1 bg-background/50 rounded py-1 px-2 border border-border/50">
+                                                <span className="text-muted-foreground line-through decoration-danger/50">{formatSize(imageStats.orig)}</span>
+                                                <span className="text-muted-foreground">→</span>
+                                                <span className="font-bold text-foreground">{formatSize(imageStats.comp)}</span>
+                                                <span className="text-success font-bold ml-2">-{Math.round((1 - imageStats.comp / imageStats.orig) * 100)}%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <Input placeholder="https://..." name="image_url" value={formData.image_url} onChange={(e) => { handleChange(e); setImageStats(null); }} />
                             <p className="text-xs text-muted-foreground">URL d'une image en grand format .jpg ou .png</p>
                         </div>
                         <div className="space-y-4">
