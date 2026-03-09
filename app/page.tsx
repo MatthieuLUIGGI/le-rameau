@@ -19,8 +19,8 @@ export default function LandingPage() {
             Le Rameau
           </Link>
           <nav className="hidden md:flex items-center gap-6 font-medium text-sm text-muted-foreground text-foreground/80">
+            <Link href="#presentation" className="hover:text-primary transition-colors">Présentation</Link>
             <Link href="#features" className="hover:text-primary transition-colors">Fonctionnalités</Link>
-            <Link href="#about" className="hover:text-primary transition-colors">À propos</Link>
             <Link href="#contact" className="hover:text-primary transition-colors">Contact</Link>
           </nav>
           <div className="flex items-center gap-3">
@@ -38,18 +38,6 @@ export default function LandingPage() {
         <Hero />
 
         <FeaturesSection />
-
-        {/* CTA Final */}
-        <section className="py-24 bg-primary dark:bg-slate-950 text-white text-center relative overflow-hidden border-t border-border" id="contact">
-          <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-10 mix-blend-overlay dark:opacity-5"></div>
-          <div className="container mx-auto px-4 relative z-10">
-            <h2 className="text-3xl md:text-5xl font-extrabold mb-6">Prêt à moderniser votre copropriété ?</h2>
-            <p className="text-xl text-blue-100 dark:text-muted-foreground mb-10 max-w-2xl mx-auto font-medium">Rejoignez des centaines de résidences qui utilisent Le Rameau tous les jours.</p>
-            <Button size="lg" className="bg-white dark:bg-primary text-primary dark:text-primary-foreground hover:bg-white/90 dark:hover:bg-primary/90 font-bold rounded-full px-8 h-14 text-lg shadow-xl" asChild>
-              <Link href="/register">Créer mon espace gratuit</Link>
-            </Button>
-          </div>
-        </section>
       </main>
 
       <Footer />

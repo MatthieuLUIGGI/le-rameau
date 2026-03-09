@@ -24,7 +24,7 @@ export function Hero() {
     }, []);
 
     return (
-        <section className="relative overflow-hidden bg-gradient-to-br from-primary to-primary-light dark:from-slate-950 dark:to-slate-900 text-white py-24 lg:py-32 border-b border-border">
+        <section id="presentation" className="relative overflow-hidden bg-gradient-to-br from-primary to-primary-light dark:from-slate-950 dark:to-slate-900 text-white py-24 lg:py-32 border-b border-border">
             <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-20 dark:opacity-5 mix-blend-overlay"></div>
 
             <div className="container mx-auto px-4 relative z-10 flex flex-col lg:flex-row items-center gap-12">
