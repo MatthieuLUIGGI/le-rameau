@@ -34,19 +34,13 @@ export function Hero() {
                     transition={{ duration: 0.8 }}
                     className="flex-1 text-center lg:text-left"
                 >
-                    <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
-                        Ton immeuble,<br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-white">dans la poche.</span>
+                    <h1 className="text-4xl lg:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
+                        Bienvenue à la<br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-white">Résidence Le Rameau</span>
                     </h1>
-                    <p className="text-lg lg:text-xl text-blue-100 dark:text-muted-foreground mb-8 max-w-2xl mx-auto lg:mx-0">
-                        La plateforme tout-en-un pour les résidents et les gestionnaires de copropriété.
-                        Annonces, messagerie et bien plus.
+                    <p className="text-lg lg:text-xl text-blue-100 dark:text-muted-foreground mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed text-justify lg:text-left">
+                        Idéalement située au 5, rue André Malraux, au cœur du quartier Clemenceau à Dijon, la Résidence Le Rameau allie cadre de vie agréable et situation géographique privilégiée. À deux pas des commerces, des transports et de toutes les commodités du centre-ville, elle offre un environnement calme et résidentiel, pensé pour le confort de ses habitants au quotidien.
                     </p>
-                    <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                        <Button size="lg" className="bg-white dark:bg-primary text-primary dark:text-primary-foreground hover:bg-white/90 dark:hover:bg-primary/90 font-bold rounded-full px-8 h-14 text-lg w-full sm:w-auto shadow-xl border border-white/10" asChild>
-                            <Link href="/register">Commencer gratuitement</Link>
-                        </Button>
-                    </div>
                 </motion.div>
 
                 <motion.div
