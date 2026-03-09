@@ -5,6 +5,7 @@ import { Card, CardContent } from "../ui/card";
 import { Phone, Mail, Clock, Info } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { Avatar, AvatarFallback } from "../ui/avatar";
+import { getInitials } from "../../lib/utils";
 
 export function ContactCard({ contact }: { contact: Contact }) {
     const isEmergency = contact.nom.toLowerCase().includes('pompier') ||
@@ -20,7 +21,7 @@ export function ContactCard({ contact }: { contact: Contact }) {
                 <div className="flex items-start gap-4 mb-4">
                     <Avatar className={`h-12 w-12 ${isEmergency ? 'bg-danger text-white' : 'bg-primary text-white'} border border-black/10 shadow-sm`}>
                         <AvatarFallback className="text-lg font-bold bg-transparent">
-                            {contact.nom.substring(0, 2).toUpperCase()}
+                            {getInitials(contact.nom)}
                         </AvatarFallback>
                     </Avatar>
 

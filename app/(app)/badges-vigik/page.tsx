@@ -48,7 +48,7 @@ export default function BadgesVigikPage() {
                         <div className="space-y-3">
                             <h3 className="font-bold text-foreground">Si vous avez besoin d'un nouveau badge :</h3>
                             <p className="text-muted-foreground font-medium bg-muted p-4 rounded-lg">
-                                Faites la demande au Syndic via la page de contact.
+                                Faites la demande au Syndic.
                             </p>
                             {vigikInfo && (
                                 <p className="text-sm text-foreground/70 italic mt-2">

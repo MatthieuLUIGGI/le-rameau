@@ -67,7 +67,7 @@ export default function SyndicPage() {
                     <div className="relative">
                         <div className="flex flex-col items-center">
                             <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-bold tracking-widest uppercase mb-4 shadow-sm relative z-10">
-                                Niveau 1 : Le Syndic
+                                Le Syndic
                             </span>
 
                             {syndicList.length > 0 ? syndicList.map((syndic, idx) => (
@@ -154,7 +154,7 @@ export default function SyndicPage() {
                     <div className="relative pt-4 md:pt-0">
                         <div className="flex flex-col items-center mb-8">
                             <span className="bg-muted text-foreground px-4 py-1 rounded-full text-sm font-bold tracking-widest uppercase shadow-sm relative z-10 border border-border">
-                                Niveau 2 : Membres du Conseil Syndical
+                                Membres du Conseil Syndical
                             </span>
                         </div>
 

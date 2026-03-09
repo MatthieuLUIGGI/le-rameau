@@ -134,7 +134,7 @@ export default function BoardMembersPage() {
                                     </td>
                                     <td className="px-6 py-4 text-muted-foreground font-medium">
                                         {member.batiment ? `Bât ${member.batiment} - ` : ''}
-                                        {member.appartement ? `Apt ${member.appartement}` : '-'}
+                                        {member.appartement ? `App ${member.appartement}` : '-'}
                                     </td>
                                     <td className="px-6 py-4 flex items-center gap-2 text-muted-foreground">
                                         <Calendar className="w-4 h-4 opacity-50" />

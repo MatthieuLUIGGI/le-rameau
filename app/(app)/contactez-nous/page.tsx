@@ -54,9 +54,6 @@ export default function ContactezNousPage() {
                             </div>
                             <div className="space-y-2">
                                 <h3 className="text-xl font-extrabold text-foreground">Notre Adresse</h3>
-                                <p className="text-muted-foreground font-medium text-sm">
-                                    Adresse physique de la résidence "Le Rameau" pour vos courriers ou livraisons.
-                                </p>
                                 <div className="mt-2 bg-muted p-4 rounded-xl border border-border/50">
                                     <address className="not-italic text-lg font-bold text-foreground">
                                         5 Rue André Malraux<br />
@@ -71,11 +68,6 @@ export default function ContactezNousPage() {
                 <div className="relative w-full h-[400px] lg:h-full min-h-[400px]">
                     <Card className="bg-surface rounded-3xl border border-border mt-0 shadow-sm relative overflow-hidden h-full group pb-1">
                         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-primary to-blue-500 z-10"></div>
-                        <div className="absolute top-6 left-6 z-10 bg-background/90 backdrop-blur-md px-4 py-3 rounded-xl border border-border/50 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                            <p className="font-bold text-sm text-foreground flex items-center gap-2">
-                                <MapPin className="w-5 h-5 text-primary" /> Résidence Le Rameau
-                            </p>
-                        </div>
                         <iframe
                             src="https://maps.google.com/maps?q=5%20Rue%20Andr%C3%A9%20Malraux,%2021000%20Dijon&t=&z=15&ie=UTF8&iwloc=&output=embed"
                             width="100%"

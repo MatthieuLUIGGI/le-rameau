@@ -4,7 +4,7 @@ import { Message } from "../../types";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { cn } from "../../lib/utils";
+import { cn, getInitials } from "../../lib/utils";
 
 interface MessageBubbleProps {
     message: Message;
@@ -23,7 +23,7 @@ export function MessageBubble({ message, isOwn, showAvatar }: MessageBubbleProps
                         <Avatar className="h-10 w-10 border border-border/50 shadow-sm">
                             <AvatarImage src={message.auteur?.avatar_url} />
                             <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-                                {message.auteur?.prenom[0]}{message.auteur?.nom[0]}
+                                {getInitials(message.auteur?.prenom, message.auteur?.nom)}
                             </AvatarFallback>
                         </Avatar>
                     ) : null}

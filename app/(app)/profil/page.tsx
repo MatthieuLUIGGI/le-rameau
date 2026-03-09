@@ -16,6 +16,7 @@ import { Label } from "../../../components/ui/label";
 import { Input } from "../../../components/ui/input";
 import { useState } from "react";
 import { logAction } from "../../../lib/logger";
+import { getInitials } from "../../../lib/utils";
 
 export default function ProfilPage() {
     const { user, mutate } = useUser();
@@ -254,7 +255,7 @@ export default function ProfilPage() {
                     <div className="relative shrink-0">
                         <Avatar className="h-32 w-32 border-4 border-white/20 shadow-xl bg-white text-primary">
                             <AvatarImage src={user.avatar_url} />
-                            <AvatarFallback className="text-5xl font-black">{user.prenom[0]}{user.nom[0]}</AvatarFallback>
+                            <AvatarFallback className="text-5xl font-black">{getInitials(user.prenom, user.nom)}</AvatarFallback>
                         </Avatar>
                         {user.is_verified && (
                             <div className="absolute bottom-1 right-1 bg-success text-white rounded-full p-1.5 shadow-sm border-2 border-primary-light" title="Compte vérifié">
@@ -268,7 +269,7 @@ export default function ProfilPage() {
                         <p className="text-primary-foreground/80 text-lg font-medium mb-6 uppercase tracking-widest">{user.role}</p>
                         <div className="inline-flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl backdrop-blur-sm border border-white/20">
                             <Building className="h-5 w-5 opacity-70" />
-                            <span className="font-semibold">Bât {user.batiment || "-"} — Apt. {user.appartement || "-"}</span>
+                            <span className="font-semibold">Bât {user.batiment || "-"} — App. {user.appartement || "-"}</span>
                         </div>
                     </div>
                 </CardContent>

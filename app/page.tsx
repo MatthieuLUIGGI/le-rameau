@@ -6,6 +6,7 @@ import { Button } from "../components/ui/button";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { AlertTriangle, Bell, MessageSquare, Building2 } from "lucide-react";
 import Link from "next/link";
+import { getInitials } from "../lib/utils";
 
 export default function LandingPage() {
   return (
@@ -98,7 +99,7 @@ export default function LandingPage() {
                 <Card key={i} className="bg-surface shadow-sm hover:shadow-md transition-shadow h-full flex flex-col p-6 rounded-2xl border-none border border-border">
                   <div className="flex items-center gap-4 mb-4">
                     <Avatar className="h-12 w-12 bg-primary/10 text-primary border border-primary/20 font-bold">
-                      <AvatarFallback>{t.name[0]}</AvatarFallback>
+                      <AvatarFallback>{getInitials(t.name)}</AvatarFallback>
                     </Avatar>
                     <div>
                       <h4 className="font-bold text-primary">{t.name}</h4>

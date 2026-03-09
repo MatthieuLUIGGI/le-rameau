@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { cn } from "../../lib/utils";
+import { cn, getInitials } from "../../lib/utils";
 import { motion } from "framer-motion";
 import {
     Home,
@@ -94,12 +94,12 @@ export function Sidebar() {
                                 <Avatar className="flex-shrink-0">
                                     <AvatarImage src={user.avatar_url || ''} />
                                     <AvatarFallback className="bg-primary/10 text-primary">
-                                        {user.prenom[0]}{user.nom[0]}
+                                        {getInitials(user.prenom, user.nom)}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="truncate">
                                     <p className="text-sm font-medium text-primary truncate">{user.prenom} {user.nom}</p>
-                                    {user.appartement && <p className="text-xs text-muted-foreground">Apt. {user.appartement}</p>}
+                                    {user.appartement && <p className="text-xs text-muted-foreground">App. {user.appartement}</p>}
                                 </div>
                             </div>
                             <div className="flex-shrink-0 -mr-2">

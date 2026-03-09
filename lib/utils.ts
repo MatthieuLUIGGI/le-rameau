@@ -43,3 +43,11 @@ export function openBase64Pdf(base64String: string | null) {
     window.open(base64String, '_blank');
   }
 }
+
+export function getInitials(prenom?: string | null, nom?: string | null): string {
+  const extract = (str?: string | null) => {
+    if (!str) return '';
+    return str.split(/[\s-]+/).filter(Boolean).map(n => n[0]).join('').toUpperCase();
+  };
+  return extract(prenom) + extract(nom);
+}
