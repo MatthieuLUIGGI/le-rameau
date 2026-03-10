@@ -24,14 +24,10 @@ CREATE TABLE public.admin_board_password (
 CREATE TABLE public.assemblee_generale (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   position integer DEFAULT 0,
-  pv_titre text,
-  pv_date text,
-  pv_type text,
-  pv_url text,
-  rapport_titre text,
-  rapport_date text,
-  rapport_type text,
-  rapport_url text,
+  titre text NOT NULL DEFAULT ''::text,
+  date text NOT NULL DEFAULT ''::text,
+  type text NOT NULL DEFAULT 'empty'::text CHECK (type = ANY (ARRAY['file'::text, 'link'::text, 'empty'::text])),
+  url text,
   created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   CONSTRAINT assemblee_generale_pkey PRIMARY KEY (id)
@@ -44,15 +40,11 @@ CREATE TABLE public.conseil_password (
 );
 CREATE TABLE public.conseil_syndical (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  position integer NOT NULL,
-  oj_titre text,
-  oj_date text,
-  oj_type text DEFAULT 'empty'::text CHECK (oj_type = ANY (ARRAY['file'::text, 'link'::text, 'empty'::text])),
-  oj_url text,
-  cr_titre text,
-  cr_date text,
-  cr_type text DEFAULT 'empty'::text CHECK (cr_type = ANY (ARRAY['file'::text, 'link'::text, 'empty'::text])),
-  cr_url text,
+  position integer NOT NULL DEFAULT 0,
+  titre text NOT NULL DEFAULT ''::text,
+  date text NOT NULL DEFAULT ''::text,
+  type text NOT NULL DEFAULT 'empty'::text CHECK (type = ANY (ARRAY['file'::text, 'link'::text, 'empty'::text])),
+  url text,
   created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   CONSTRAINT conseil_syndical_pkey PRIMARY KEY (id)
@@ -83,6 +75,7 @@ CREATE TABLE public.membres_conseil_syndical (
   batiment text NOT NULL,
   photo_url text,
   created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  ordre integer NOT NULL DEFAULT 0,
   CONSTRAINT membres_conseil_syndical_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.notifications (

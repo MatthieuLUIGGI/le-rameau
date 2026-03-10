@@ -20,52 +20,8 @@ export function useNotifications(userId?: string | null) {
     const fetchNotifications = useCallback(async () => {
         const supabase = createClient();
 
-        // Nettoyage silencieux des notifications liées aux actualités expirées
-        const cleanupExpiredActualitesNotifications = async () => {
-            if (hasCleanedUpExpired) return;
-            hasCleanedUpExpired = true;
-
-            try {
-                const now = new Date().toISOString();
-                const { data: expired } = await supabase
-                    .from('actualites')
-                    .select('id, titre')
-                    .not('date_expiration', 'is', null)
-                    .lt('date_expiration', now);
-
-                if (expired && expired.length > 0) {
-                    const expiredIds = expired.map(e => e.id);
-                    await supabase.from('notifications').delete().in('entity_id', expiredIds);
-
-                    // Ajouter un log d'expiration une seule fois
-                    const { data: existingLogs } = await supabase
-                        .from('user_logs')
-                        .select('details')
-                        .eq('action_type', 'Expiration');
-
-                    const existingDetails = new Set(existingLogs?.map(l => l.details) || []);
-
-                    const logsToInsert = expired
-                        .filter(e => !existingDetails.has(`A expiré l'actualité: ${e.titre}`))
-                        .map(e => ({
-                            user_id: null,
-                            user_name: 'Système',
-                            user_email: 'robot@system.fr',
-                            action_type: 'Expiration',
-                            details: `A expiré l'actualité: ${e.titre}`,
-                            old_data: e,
-                            new_data: null
-                        }));
-
-                    if (logsToInsert.length > 0) {
-                        await supabase.from('user_logs').insert(logsToInsert);
-                    }
-                }
-            } catch (e) {
-                console.error("[Cleanup] Failed to clean expired actualites notifications", e);
-            }
-        };
-        cleanupExpiredActualitesNotifications();
+        // Nettoyage silencieux des expirées (via API sécurisée)
+        fetch('/api/cron/check-expirations').catch(e => console.error(e));
 
         const { data, error } = await supabase
             .from('notifications')
