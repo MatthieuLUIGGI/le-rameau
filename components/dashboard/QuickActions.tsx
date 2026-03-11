@@ -1,18 +1,13 @@
 "use client";
 
 import { useUser } from "../../lib/hooks/useUser";
-import { useMessages } from "../../lib/hooks/useMessages";
 import { Button } from "../ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
-import { AlertTriangle, Mail, Newspaper } from "lucide-react";
+import { AlertTriangle, Newspaper } from "lucide-react";
 import Link from "next/link";
-import { Badge } from "../ui/badge";
 
 export function QuickActions() {
     const { user } = useUser();
-    const { messages } = useMessages();
-
-    const unreadMessagesCount = messages?.filter(m => !m.is_read).length || 0;
 
     return (
         <Card className="h-full shadow-sm">
@@ -21,19 +16,9 @@ export function QuickActions() {
             </CardHeader>
             <CardContent className="space-y-3">
                 <Button variant="default" asChild className="w-full justify-start h-12 shadow-sm font-medium bg-primary hover:bg-primary-light">
-                    <Link href="/messages" className="relative">
-                        <Mail className="mr-2 h-5 w-5" />
-                        Nouveau message
-                        {unreadMessagesCount > 0 && (
-                            <Badge className="ml-auto bg-white text-primary hover:bg-white">{unreadMessagesCount}</Badge>
-                        )}
-                    </Link>
-                </Button>
-
-                <Button variant="outline" asChild className="w-full justify-start h-12 shadow-sm font-medium border-success/30 text-success hover:bg-success hover:text-white">
-                    <Link href="/annonces">
+                    <Link href="/actualites">
                         <Newspaper className="mr-2 h-5 w-5" />
-                        Voir les annonces
+                        Voir les actualités
                     </Link>
                 </Button>
             </CardContent>

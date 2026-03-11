@@ -16,10 +16,6 @@ export function Header() {
         if (pathname.includes('/consultations')) return 'Consultations';
         if (pathname.includes('/contactez-nous')) return 'Contact';
         if (pathname.includes('/profil')) return 'Profil';
-        // Legacy routes if not removed
-        if (pathname.includes('/evenements')) return 'Événements';
-        if (pathname.includes('/messages')) return 'Messages';
-        if (pathname.includes('/contacts')) return 'Contacts';
 
         return ''; // Dashboard/Accueil is handled differently or left empty
     };
