@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+export const dynamic = 'force-dynamic';
+
 // Ce cron est conçu pour être appelé de manière sécurisée (par exemple via Vercel Cron ou pg_cron)
 export async function GET(request: Request) {
     // Vérification éventuelle d'un token d'autorisation
