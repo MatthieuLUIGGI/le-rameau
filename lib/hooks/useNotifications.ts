@@ -11,8 +11,6 @@ export interface NotificationItem {
     read_by: string[];
 }
 
-let hasCleanedUpExpired = false;
-
 export function useNotifications(userId?: string | null) {
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
