@@ -4,35 +4,23 @@ import { useEffect, useState } from "react";
 import { useUser } from "../../../lib/hooks/useUser";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { useTheme } from "next-themes";
 
 import { Skeleton } from "../../../components/ui/skeleton";
 import { Newspaper, Mail, Book, FileText, Download, Users, Key, Landmark, MessageSquare } from "lucide-react";
 import Link from "next/link";
-import Spline from '@splinetool/react-spline';
 
 export default function DashboardPage() {
     const { user, isLoading: isUserLoading } = useUser();
     const today = new Date();
 
-    const { resolvedTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
-    const splineUrl = mounted && resolvedTheme === "dark"
-        ? "https://prod.spline.design/he6IR755YQ9q4OHw/scene.splinecode"
-        : "https://prod.spline.design/yWpujGvHRy0BxfVy/scene.splinecode";
-
     return (
         <div className="space-y-6 animate-in fade-in duration-500 relative min-h-[calc(100vh-140px)] flex flex-col pb-4 lg:pb-0">
-            {/* Spline 3D Background */}
-            <div className="fixed inset-0 w-[100vw] h-[100vh] z-0 overflow-hidden pointer-events-none">
-                {mounted && <Spline scene={splineUrl} />}
-            </div>
-
             <div className="relative z-10 w-full">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 relative z-10 w-full mb-6">
                     <div>
