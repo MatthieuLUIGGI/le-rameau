@@ -266,7 +266,7 @@ export default function ProfilPage() {
 
                     <div className="flex-1 text-center md:text-left z-10">
                         <h2 className="text-3xl sm:text-4xl font-black mb-2 tracking-tight">{user.prenom} {user.nom}</h2>
-                        <p className="text-primary-foreground/80 text-lg font-medium mb-6 uppercase tracking-widest">{user.role}</p>
+                        <p className="text-white/80 text-lg font-medium mb-6 uppercase tracking-widest">{user.role}</p>
                         <div className="inline-flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl backdrop-blur-sm border border-white/20">
                             <Building className="h-5 w-5 opacity-70" />
                             <span className="font-semibold">Bât {user.batiment || "-"} — App. {user.appartement || "-"}</span>
