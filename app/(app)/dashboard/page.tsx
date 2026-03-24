@@ -2,7 +2,7 @@
 
 import { useUser } from "../../../lib/hooks/useUser";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../components/ui/card";
-import { ShieldCheck, Users, Megaphone, FileText, Building, Key, MessageSquare } from "lucide-react";
+import { ShieldCheck, Users, Megaphone, FileText, Building, Key, MessageSquare, Bot } from "lucide-react";
 import { DEMO_MODE } from "../../../lib/demo-data";
 import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -154,6 +154,25 @@ export default function DashboardPage() {
                             </CardTitle>
                             <CardDescription className="pt-2">
                                 Créer des sondages pour recueillir l'avis des résidents.
+                            </CardDescription>
+                        </CardHeader>
+                    </Card>
+                </Link>
+
+                <Link href="/dashboard/message-robot" className="block group">
+                    <Card className="bg-surface border-border shadow-sm group-hover:shadow-md group-hover:border-primary/50 transition-all cursor-pointer h-full relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <Bot className="w-16 h-16 -mt-2 -mr-2 text-primary" />
+                        </div>
+                        <CardHeader className="pb-2 relative z-10">
+                            <CardTitle className="text-lg font-bold flex items-center gap-2 group-hover:text-primary transition-colors">
+                                <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                                    <Bot className="h-5 w-5" />
+                                </div>
+                                Message Robot
+                            </CardTitle>
+                            <CardDescription className="pt-2">
+                                Gérer le message d'alerte ou de bienvenue du robot sur l'accueil.
                             </CardDescription>
                         </CardHeader>
                     </Card>
