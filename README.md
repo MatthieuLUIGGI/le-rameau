@@ -1,22 +1,23 @@
 # Le Rameau - Application de gestion de copropriété
 
-Bienvenue sur le dépôt du projet **Le Rameau**. C'est une application moderne destinée à simplifier la vie en copropriété.
+Bienvenue sur le dépôt du projet **Le Rameau**. C'est une application moderne, sécurisée et sur-mesure, destinée à simplifier la communication et la vie en copropriété pour les résidents et le conseil syndical.
 
 ## Prérequis
 
 - Node.js 18+
 - npm ou yarn
-- Projet Supabase créé avec une base de données PostgreSQL
+- Projet Supabase configuré avec une base de données PostgreSQL
 
 ## Stack technique
 
-- **Framework**: Next.js 14 (App Router)
+- **Framework**: Next.js (App Router)
 - **Langage**: TypeScript
 - **Style**: Tailwind CSS
-- **Composants**: shadcn/ui
-- **Backend & Auth**: Supabase
+- **Composants**: shadcn/ui, Framer Motion
+- **Animations & 3D**: Spline
+- **Backend, Base de données & Auth**: Supabase
 - **Validation**: Zod
-- **Data Fetching**: SWR
+- **Icônes**: Lucide React
 
 ## Installation
 
@@ -29,29 +30,34 @@ Bienvenue sur le dépôt du projet **Le Rameau**. C'est une application moderne 
    ```bash
    cp .env.local.example .env.local
    ```
-   Remplissez les clés d'API (Supabase, OpenWeather).
+   Remplissez les clés d'API (notamment `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY`).
 
 4. Configurer Supabase :
-   Exécutez le script SQL `supabase/schema.sql` dans l'éditeur SQL de votre projet Supabase pour créer toutes les tables, triggers et RLS.
+   Exécutez les scripts SQL (ex: `supabase/schema.sql`, `supabase/new_query.sql`) dans l'éditeur SQL de votre projet Supabase pour créer toutes les tables, triggers et les politiques de sécurité (RLS).
 
 5. Lancer le serveur de développement :
    ```bash
    npm run dev
    ```
 
-## Mode Démo
-
-Si la variable d'environnement `NEXT_PUBLIC_SUPABASE_URL` n'est pas définie, l'application fonctionnera en **Mode Démo** grâce aux données fictives situées dans `lib/demo-data.ts`.
-
 ## Fonctionnalités principales
 
-- Dashboard personnalisé avec widgets météo et actions rapides
-- Annonces classées par catégories
-- Alertes d'urgence en temps réel
-- Calendrier partagé
-- Messagerie communautaire (Canaux et DMs)
-- Annuaire des contacts et rôles
+L'application est conçue autour des besoins réels d'une copropriété, remplaçant ainsi les affichages papiers traditionnels par un espace numérique centralisé :
+
+- **Espace Public & Landing Page** : Présentation attractive de la résidence avec un design moderne (Dark Luxury) et un assistant robot interactif en 3D (Spline) qui relaye les alertes importantes en temps réel.
+- **Tableau de bord Résident** : Accès rapide sécurisé aux actualités, informations du syndic, demandes de badges Vigik et documents officiels.
+- **Actualités et Alertes** : Suivi des informations importantes de la copropriété (travaux, coupures d'eau, événements de la vie courante).
+- **Espace Documentaire** : Consultation et téléchargement des comptes rendus d'Assemblées Générales et des réunions du Conseil Syndical.
+- **Démocratie Participative** : Module de consultations et de sondages internes avec vérification de l'unicité des votes (un seul vote par appartement).
+- **Espace Administration (Conseil Syndical)** : Dashboard sécurisé réservé aux administrateurs (membres du conseil) pour gérer les contenus (CRUD des actualités, gestion des documents, création de sondages, personnalisation du message d'accueil du robot) de manière totalement autonome.
+
+## Architecture & Sécurité
+
+- **Authentification robuste** gérée via Supabase Auth.
+- **Protection des données** avec la Row-Level Security (RLS) directement sur PostgreSQL, garantissant que chacun n'accède qu'à ce qu'il a le droit de voir.
+- **Contrôle d'accès (RBAC)** : séparation stricte entre les profils résidents classiques et les membres de l'assemblée / conseil syndical (rôle `ag`).
+- Conformité aux bonnes pratiques d'**accessibilité** (RGAA) et d'**éco-conception**.
 
 ## Déploiement
 
-Le projet est optimisé pour être déployé facilement sur Vercel. Connectez simplement le dépôt et ajoutez les variables d'environnement.
+Le projet est optimisé pour être déployé facilement sur Vercel. Connectez simplement votre dépôt Git à Vercel, ajoutez vos variables d'environnement Supabase, et le déploiement continu s'occupera du reste à chaque modification de la branche principale.

@@ -18,8 +18,7 @@ export function useNotifications(userId?: string | null) {
     const fetchNotifications = useCallback(async () => {
         const supabase = createClient();
 
-        // Nettoyage silencieux des expirées (via API sécurisée)
-        fetch('/api/cron/check-expirations').catch(e => console.error(e));
+        // Cron task is handled server-side by Vercel/pg_cron
 
         const { data, error } = await supabase
             .from('notifications')

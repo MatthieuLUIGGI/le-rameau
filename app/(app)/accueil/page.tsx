@@ -31,8 +31,8 @@ export default function DashboardPage() {
                                 Bonjour, {user?.prenom || "Résident"} 👋
                             </h1>
                         )}
-                        <p className="text-blue-500 font-medium capitalize">
-                            {format(today, "EEEE d MMMM yyyy", { locale: fr })}
+                        <p className="text-blue-500 font-medium capitalize min-h-[24px]">
+                            {mounted ? format(today, "EEEE d MMMM yyyy", { locale: fr }) : ""}
                         </p>
                     </div>
                 </div>

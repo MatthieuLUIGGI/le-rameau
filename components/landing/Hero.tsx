@@ -4,13 +4,14 @@ import { motion } from "framer-motion";
 import { Button } from "../ui/button";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import Script from "next/script";
+import Spline from '@splinetool/react-spline';
 import { useEffect, useState } from "react";
 import { createClient } from "../../lib/supabase/client";
 
 export function Hero() {
     const [message, setMessage] = useState("Bienvenue sur le site de la Copropriété");
     const [isAlert, setIsAlert] = useState(false);
+    const [mounted, setMounted] = useState(false);
     
     useEffect(() => {
         const supabase = createClient();
@@ -31,19 +32,7 @@ export function Hero() {
             }
         }
         fetchMessage();
-        
-        const hideLogo = () => {
-            const splines = document.querySelectorAll('spline-viewer');
-            splines.forEach((spline) => {
-                if (spline.shadowRoot) {
-                    const logo = spline.shadowRoot.querySelector('#logo');
-                    if (logo) logo.remove();
-                }
-            });
-        };
-        const intervalId = setInterval(hideLogo, 1000);
-        setTimeout(() => clearInterval(intervalId), 10000); // Stop checking after 10s
-        return () => clearInterval(intervalId);
+        setMounted(true);
     }, []);
 
     return (
@@ -93,17 +82,14 @@ export function Hero() {
                                 </div>
                             </div>
                         </motion.div>
-
-                        <Script type="module" src="https://unpkg.com/@splinetool/viewer@1.12.60/build/spline-viewer.js" strategy="lazyOnload" />
-                        <style dangerouslySetInnerHTML={{
-                            __html: `
-                            spline-viewer::part(logo) {
-                                display: none !important;
-                            }
-                        `}} />
-                        <div className="w-full h-full" dangerouslySetInnerHTML={{
-                            __html: `<spline-viewer url="https://prod.spline.design/SHNAia1yu84cUs1T/scene.splinecode" style="width: 100%; height: 100%;"></spline-viewer>`
-                        }} />
+                        <div className="w-full h-full relative flex items-center justify-center pointer-events-auto">
+                            {mounted && (
+                                <Spline 
+                                    scene="https://prod.spline.design/SHNAia1yu84cUs1T/scene.splinecode" 
+                                    style={{ width: '100%', height: '100%' }}
+                                />
+                            )}
+                        </div>
                     </div>
                 </motion.div>
             </div>
