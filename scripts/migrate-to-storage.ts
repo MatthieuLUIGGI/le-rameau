@@ -17,7 +17,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 // Chargement des variables d'environnement depuis .env.local
-const envPath = path.resolve(__dirname, '../.env.local');
+const envPath = path.resolve(process.cwd(), '.env.local');
 if (fs.existsSync(envPath)) {
     const envContent = fs.readFileSync(envPath, 'utf-8');
     envContent.split('\n').forEach(line => {
@@ -48,6 +48,12 @@ type ActualiteRow = {
     titre: string;
     image_url: string | null;
     pdf_url: string | null;
+};
+
+type DocRow = {
+    id: string;
+    titre: string;
+    url: string | null;
 };
 
 /**
@@ -110,78 +116,122 @@ async function uploadToStorage(
 async function main() {
     console.log('🚀 Démarrage de la migration base64 → Supabase Storage...\n');
 
-    // Récupérer toutes les actualités avec des données base64
-    const { data: rows, error } = await supabase
-        .from('actualites')
-        .select('id, titre, image_url, pdf_url');
-
-    if (error) {
-        console.error('❌ Erreur lecture actualités:', error.message);
-        process.exit(1);
-    }
-
-    const actualites = (rows as ActualiteRow[]).filter(
-        r => (r.image_url?.startsWith('data:')) || (r.pdf_url?.startsWith('data:'))
-    );
-
-    if (actualites.length === 0) {
-        console.log('✅ Aucune donnée base64 trouvée. Migration non nécessaire.');
-        return;
-    }
-
-    console.log(`📋 ${actualites.length} actualité(s) à migrer...\n`);
-
     let successCount = 0;
     let errorCount = 0;
 
-    for (const actualite of actualites) {
-        console.log(`🔄 [${actualite.id}] "${actualite.titre}"`);
+    console.log('\n--- 1. MIGRATION DES ACTUALITÉS ---');
+    // Récupérer toutes les actualités avec des données base64
+    const { data: rowsActu, error: errActu } = await supabase
+        .from('actualites')
+        .select('id, titre, image_url, pdf_url');
 
-        const updates: Partial<ActualiteRow> = {};
+    if (errActu) {
+        console.error('❌ Erreur lecture actualités:', errActu.message);
+    } else {
+        const actualites = (rowsActu as ActualiteRow[]).filter(
+            r => (r.image_url?.startsWith('data:')) || (r.pdf_url?.startsWith('data:'))
+        );
 
-        // Migrer l'image
-        if (actualite.image_url?.startsWith('data:')) {
-            try {
-                const { buffer, mimeType } = base64ToBuffer(actualite.image_url);
-                const url = await uploadToStorage(buffer, mimeType, 'actualites-images', actualite.id);
-                updates.image_url = url;
-                console.log(`  ✅ Image migrée → ${url.substring(0, 60)}...`);
-            } catch (e) {
-                console.error(`  ❌ Erreur image: ${e instanceof Error ? e.message : e}`);
-                errorCount++;
-            }
-        }
+        if (actualites.length === 0) {
+            console.log('✅ Aucune donnée base64 trouvée dans actualites.');
+        } else {
+            console.log(`📋 ${actualites.length} actualité(s) à migrer...`);
+            for (const actualite of actualites) {
+                console.log(`🔄 [${actualite.id}] "${actualite.titre}"`);
+                const updates: Partial<ActualiteRow> = {};
 
-        // Migrer le fichier PDF/document
-        if (actualite.pdf_url?.startsWith('data:')) {
-            try {
-                const { buffer, mimeType } = base64ToBuffer(actualite.pdf_url);
-                const url = await uploadToStorage(buffer, mimeType, 'actualites-fichiers', actualite.id);
-                updates.pdf_url = url;
-                console.log(`  ✅ Fichier migré → ${url.substring(0, 60)}...`);
-            } catch (e) {
-                console.error(`  ❌ Erreur fichier: ${e instanceof Error ? e.message : e}`);
-                errorCount++;
-            }
-        }
+                if (actualite.image_url?.startsWith('data:')) {
+                    try {
+                        const { buffer, mimeType } = base64ToBuffer(actualite.image_url);
+                        const url = await uploadToStorage(buffer, mimeType, 'actualites-images', actualite.id);
+                        updates.image_url = url;
+                        console.log(`  ✅ Image migrée → ${url.substring(0, 60)}...`);
+                    } catch (e) {
+                        console.error(`  ❌ Erreur image: ${e instanceof Error ? e.message : e}`);
+                        errorCount++;
+                    }
+                }
 
-        // Mettre à jour la ligne en base
-        if (Object.keys(updates).length > 0) {
-            const { error: updateError } = await supabase
-                .from('actualites')
-                .update(updates)
-                .eq('id', actualite.id);
+                if (actualite.pdf_url?.startsWith('data:')) {
+                    try {
+                        const { buffer, mimeType } = base64ToBuffer(actualite.pdf_url);
+                        const url = await uploadToStorage(buffer, mimeType, 'actualites-fichiers', actualite.id);
+                        updates.pdf_url = url;
+                        console.log(`  ✅ Fichier migré → ${url.substring(0, 60)}...`);
+                    } catch (e) {
+                        console.error(`  ❌ Erreur fichier: ${e instanceof Error ? e.message : e}`);
+                        errorCount++;
+                    }
+                }
 
-            if (updateError) {
-                console.error(`  ❌ Erreur mise à jour DB: ${updateError.message}`);
-                errorCount++;
-            } else {
-                successCount++;
+                if (Object.keys(updates).length > 0) {
+                    const { error: updateError } = await supabase.from('actualites').update(updates).eq('id', actualite.id);
+                    if (updateError) {
+                        console.error(`  ❌ Erreur mise à jour DB: ${updateError.message}`);
+                        errorCount++;
+                    } else {
+                        successCount++;
+                    }
+                }
             }
         }
     }
 
-    console.log(`\n✅ Migration terminée : ${successCount} succès, ${errorCount} erreur(s).`);
+    console.log('\n--- 2. MIGRATION ASSEMBLÉE GÉNÉRALE ---');
+    const { data: rowsAg, error: errAg } = await supabase.from('assemblee_generale').select('id, titre, url');
+    if (errAg) {
+        console.error('❌ Erreur lecture assemblee_generale:', errAg.message);
+    } else {
+        const agDocs = (rowsAg as DocRow[]).filter(r => r.url?.startsWith('data:'));
+        if (agDocs.length === 0) {
+            console.log('✅ Aucune donnée base64 trouvée dans assemblee_generale.');
+        } else {
+            console.log(`📋 ${agDocs.length} document(s) AG à migrer...`);
+            for (const doc of agDocs) {
+                console.log(`🔄 [${doc.id}] "${doc.titre}"`);
+                try {
+                    const { buffer, mimeType } = base64ToBuffer(doc.url!);
+                    const uploadedUrl = await uploadToStorage(buffer, mimeType, 'ag-fichiers', doc.id);
+                    const { error: upErr } = await supabase.from('assemblee_generale').update({ url: uploadedUrl }).eq('id', doc.id);
+                    if (upErr) throw upErr;
+                    console.log(`  ✅ PDF migré → ${uploadedUrl.substring(0, 60)}...`);
+                    successCount++;
+                } catch (e) {
+                    console.error(`  ❌ Erreur: ${e instanceof Error ? e.message : e}`);
+                    errorCount++;
+                }
+            }
+        }
+    }
+
+    console.log('\n--- 3. MIGRATION CONSEIL SYNDICAL ---');
+    const { data: rowsCs, error: errCs } = await supabase.from('conseil_syndical').select('id, titre, url');
+    if (errCs) {
+        console.error('❌ Erreur lecture conseil_syndical:', errCs.message);
+    } else {
+        const csDocs = (rowsCs as DocRow[]).filter(r => r.url?.startsWith('data:'));
+        if (csDocs.length === 0) {
+            console.log('✅ Aucune donnée base64 trouvée dans conseil_syndical.');
+        } else {
+            console.log(`📋 ${csDocs.length} document(s) CS à migrer...`);
+            for (const doc of csDocs) {
+                console.log(`🔄 [${doc.id}] "${doc.titre}"`);
+                try {
+                    const { buffer, mimeType } = base64ToBuffer(doc.url!);
+                    const uploadedUrl = await uploadToStorage(buffer, mimeType, 'cs-fichiers', doc.id);
+                    const { error: upErr } = await supabase.from('conseil_syndical').update({ url: uploadedUrl }).eq('id', doc.id);
+                    if (upErr) throw upErr;
+                    console.log(`  ✅ PDF migré → ${uploadedUrl.substring(0, 60)}...`);
+                    successCount++;
+                } catch (e) {
+                    console.error(`  ❌ Erreur: ${e instanceof Error ? e.message : e}`);
+                    errorCount++;
+                }
+            }
+        }
+    }
+
+    console.log(`\n✅ Migration terminée : ${successCount} éléments migrés avec succès, ${errorCount} erreur(s).`);
     if (errorCount > 0) {
         console.log('⚠️  Vérifiez les erreurs ci-dessus et relancez pour les entrées échouées.');
     }
