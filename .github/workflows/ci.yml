@@ -22,7 +22,7 @@ jobs:
           cache: 'npm'
 
       - name: Installer les dépendances
-        run: npm ci
+        run: npm install
 
       - name: Lint (ESLint)
         run: npm run lint
