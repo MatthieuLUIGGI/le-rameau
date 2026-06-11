@@ -31,7 +31,7 @@ export default function DashboardPage() {
                                 Bonjour, {user?.prenom || "Résident"} 👋
                             </h1>
                         )}
-                        <p className="text-blue-500 font-medium capitalize min-h-[24px]">
+                        <p className="text-blue-700 dark:text-blue-400 font-medium capitalize min-h-[24px]">
                             {mounted ? format(today, "EEEE d MMMM yyyy", { locale: fr }) : ""}
                         </p>
                     </div>
@@ -44,7 +44,7 @@ export default function DashboardPage() {
                         <Newspaper className="h-5 w-5" />
                         <span className="truncate">Actualités</span>
                     </Link>
-                    <Link href="/contactez-nous" className="flex items-center justify-center gap-2 p-4 bg-surface/80 backdrop-blur-md border border-border hover:bg-muted/50 rounded-xl transition-colors shadow-sm font-semibold text-blue-500">
+                    <Link href="/contactez-nous" className="flex items-center justify-center gap-2 p-4 bg-surface/80 backdrop-blur-md border border-border hover:bg-muted/50 rounded-xl transition-colors shadow-sm font-semibold text-blue-700 dark:text-blue-400">
                         <Mail className="h-5 w-5" />
                         <span className="truncate">Nous contacter</span>
                     </Link>

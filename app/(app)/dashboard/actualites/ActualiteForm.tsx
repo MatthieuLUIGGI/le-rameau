@@ -74,23 +74,60 @@ export default function ActualiteForm({ initialData }: ActualiteFormProps) {
         if (!file || !file.type.startsWith('image/')) return;
 
         try {
+            const supabase = createClient();
             const originalSize = file.size;
 
-            // Compression : resizes to max 1200x1200, 85% quality JPG
+            // Compression avant upload (resize 1200x1200, qualité 85%)
             const compressedBase64 = await compressImage(file, 1200, 1200, 0.85);
+            const response = await fetch(compressedBase64);
+            const blob = await response.blob();
 
-            // Estimate base64 actual size in bytes (approx 3/4 of length minus prefix)
-            const prefixIndex = compressedBase64.indexOf(',') + 1;
-            const sizeWithoutPrefix = compressedBase64.length - prefixIndex;
-            const compressedSize = Math.round(sizeWithoutPrefix * 0.75);
+            const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+            const { data, error } = await supabase.storage
+                .from('actualites-images')
+                .upload(fileName, blob, { contentType: file.type, upsert: false });
 
-            setFormData(prev => ({ ...prev, image_url: compressedBase64 }));
+            if (error) throw error;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('actualites-images')
+                .getPublicUrl(data.path);
+
+            const compressedSize = blob.size;
+            setFormData(prev => ({ ...prev, image_url: publicUrl }));
             setImageStats({ orig: originalSize, comp: compressedSize });
 
-            toast({ title: "Image optimisée", description: "L'image a été compressée pour accélérer le site.", variant: "default" });
+            toast({ title: "Image uploadée", description: "L'image a été compressée et stockée.", variant: "default" });
         } catch (error) {
-            console.error("Erreur de compression:", error);
-            toast({ title: "Erreur", description: "Impossible de compresser l'image.", variant: "destructive" });
+            console.error("Erreur d'upload image:", error);
+            toast({ title: "Erreur", description: "Impossible d'uploader l'image.", variant: "destructive" });
+        }
+    };
+
+    const handleFileUpload = async (file: File) => {
+        const allowed = file.type.includes('pdf') || file.type.includes('word') || file.type.includes('excel')
+            || file.type.includes('spreadsheet') || file.type.includes('officedocument')
+            || file.name.match(/\.(doc|docx|xls|xlsx|pdf)$/i);
+        if (!allowed) return;
+
+        try {
+            const supabase = createClient();
+            const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+            const { data, error } = await supabase.storage
+                .from('actualites-fichiers')
+                .upload(fileName, file, { contentType: file.type, upsert: false });
+
+            if (error) throw error;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('actualites-fichiers')
+                .getPublicUrl(data.path);
+
+            setFormData(prev => ({ ...prev, pdf_url: publicUrl }));
+            toast({ title: "Fichier uploadé", description: `${file.name} est prêt.`, variant: "default" });
+        } catch (error) {
+            console.error("Erreur d'upload fichier:", error);
+            toast({ title: "Erreur", description: "Impossible d'uploader le fichier.", variant: "destructive" });
         }
     };
 
@@ -248,7 +285,7 @@ export default function ActualiteForm({ initialData }: ActualiteFormProps) {
                                 }} />
                             </div>
 
-                            {imageStats && formData.image_url.startsWith('data:') && (
+                            {imageStats && (
                                 <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 relative !mt-2">
                                     <div className="flex items-start gap-3">
                                         <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
@@ -274,11 +311,8 @@ export default function ActualiteForm({ initialData }: ActualiteFormProps) {
                                 onDrop={(e) => {
                                     e.preventDefault();
                                     const file = e.dataTransfer.files?.[0];
-                                    if (file && (file.type.includes('pdf') || file.type.includes('word') || file.type.includes('excel') || file.type.includes('spreadsheet') || file.type.includes('officedocument') || file.name.match(/\.(doc|docx|xls|xlsx|pdf)$/i))) {
-                                        const reader = new FileReader();
-                                        reader.onload = (event) => setFormData(prev => ({ ...prev, pdf_url: event.target?.result as string }));
-                                        reader.readAsDataURL(file);
-                                    }
+                                    if (file) handleFileUpload(file);
+
                                 }}
                                 onDragOver={(e) => e.preventDefault()}
                                 onClick={() => document.getElementById('pdf-upload')?.click()}
@@ -295,11 +329,7 @@ export default function ActualiteForm({ initialData }: ActualiteFormProps) {
                                 <p className="text-xs text-muted-foreground mt-1 text-center">Ou collez une URL ci-dessous</p>
                                 <input type="file" id="pdf-upload" className="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx" onChange={(e) => {
                                     const file = e.target.files?.[0];
-                                    if (file) {
-                                        const reader = new FileReader();
-                                        reader.onload = (event) => setFormData(prev => ({ ...prev, pdf_url: event.target?.result as string }));
-                                        reader.readAsDataURL(file);
-                                    }
+                                    if (file) handleFileUpload(file);
                                 }} />
                             </div>
                             <Input placeholder="https://..." name="pdf_url" value={formData.pdf_url} onChange={handleChange} />

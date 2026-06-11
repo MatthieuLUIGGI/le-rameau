@@ -18,17 +18,8 @@ export const registerSchema = z.object({
     confirmPassword: z.string().min(1, { message: "Veuillez confirmer votre mot de passe" }),
     batiment: z.string().min(1, { message: "Le bâtiment est obligatoire" }),
     appartement: z.string().min(1, { message: "Le numéro d'appartement est obligatoire" }),
-    rgpd: z.literal(true, {
-        errorMap: () => ({ message: "Veuillez accepter les conditions d'utilisations" })
-    } as any),
+    rgpd: z.literal(true, { message: "Veuillez accepter les conditions d'utilisations" }),
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Les mots de passe ne correspondent pas",
     path: ["confirmPassword"],
-});
-
-export const announceSchema = z.object({
-    titre: z.string().min(5, { message: "Le titre doit contenir au moins 5 caractères" }),
-    contenu: z.string().min(10, { message: "Le contenu est trop court" }),
-    categorie: z.enum(["travaux", "information", "assemblee", "divers"]),
-    is_important: z.boolean().optional(),
 });

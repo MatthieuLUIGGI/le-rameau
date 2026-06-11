@@ -5,11 +5,11 @@ export const dynamic = 'force-dynamic';
 
 // Ce cron est conçu pour être appelé de manière sécurisée (par exemple via Vercel Cron ou pg_cron)
 export async function GET(request: Request) {
-    // Vérification éventuelle d'un token d'autorisation
-    // const authHeader = request.headers.get('authorization');
-    // if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    //     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
+    // Vérification du token d'autorisation (CRON_SECRET requis)
+    const authHeader = request.headers.get('authorization');
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     // Utiliser le client admin pour contourner le RLS
     const supabaseAdmin = createClient(
@@ -70,8 +70,9 @@ export async function GET(request: Request) {
 
         return NextResponse.json({ success: true, processed: 0, logsInserted: 0 });
 
-    } catch (e: any) {
+    } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : 'Unknown error';
         console.error("Exception in check-expirations:", e);
-        return NextResponse.json({ error: e.message }, { status: 500 });
+        return NextResponse.json({ error: message }, { status: 500 });
     }
 }

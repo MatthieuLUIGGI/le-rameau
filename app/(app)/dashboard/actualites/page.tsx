@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "../../../../lib/supabase/client";
 import { useUser } from "../../../../lib/hooks/useUser";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../../components/ui/card";
 import { Button } from "../../../../components/ui/button";
@@ -14,14 +13,9 @@ import { fr } from "date-fns/locale";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../../../components/ui/dialog";
 import { logAction } from "../../../../lib/logger";
 import { deleteNotificationByEntity } from "../../../../lib/notifications";
+import { actualitesService, type ActualiteListItem } from "../../../../lib/services/actualitesService";
+import { UserRole } from "../../../../lib/types/roles";
 
-interface Actualite {
-    id: string;
-    titre: string;
-    priorite: 'basse' | 'normale' | 'haute';
-    created_at: string;
-    date_expiration: string | null;
-}
 
 const mapPrioriteToLabel = (priorite: string) => {
     switch (priorite) {
@@ -37,21 +31,24 @@ export default function AdminActualitesPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
 
-    const [actualites, setActualites] = useState<Actualite[]>([]);
+    const [actualites, setActualites] = useState<ActualiteListItem[]>([]);
     const [deleteConfirm, setDeleteConfirm] = useState<{ id: string, name: string } | null>(null);
 
     useEffect(() => {
-        if (!userLoading && user && user.role !== 'ag') {
+        if (!userLoading && user && user.role !== UserRole.AG) {
             redirect("/accueil");
         }
     }, [user, userLoading]);
 
     const fetchData = async () => {
-        const supabase = createClient();
-        const { data } = await supabase.from('actualites').select('id, titre, priorite, created_at, date_expiration').order('created_at', { ascending: false });
-
-        if (data) setActualites(data as Actualite[]);
-        setIsLoading(false);
+        try {
+            const data = await actualitesService.getAll();
+            setActualites(data);
+        } catch (e) {
+            console.error('Erreur chargement actualités:', e);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -65,24 +62,21 @@ export default function AdminActualitesPage() {
     const executeDelete = async () => {
         if (!deleteConfirm) return;
         setIsSaving(true);
-        const supabase = createClient();
-
-        // Récupérer l'élément complet avant suppression pour l'avoir dans les logs
-        const { data: itemToDelete } = await supabase.from('actualites').select('*').eq('id', deleteConfirm.id).single();
-
-        const { error } = await supabase.from('actualites').delete().eq('id', deleteConfirm.id);
-        if (error) {
-            toast({ title: "Erreur", description: error.message, variant: "destructive" });
-        } else {
+        try {
+            const deleted = await actualitesService.delete(deleteConfirm.id);
             if (user) {
-                await logAction('Suppression', user.id, `${user.prenom} ${user.nom}`, user.email, `A supprimé l'actualité: ${deleteConfirm.name}`, itemToDelete || null, null);
+                await logAction('Suppression', user.id, `${user.prenom} ${user.nom}`, user.email, `A supprimé l'actualité: ${deleteConfirm.name}`, deleted ?? undefined, undefined);
             }
             await deleteNotificationByEntity(deleteConfirm.id);
             toast({ title: "Succès", description: "L'actualité a été supprimée." });
             setActualites(prev => prev.filter(a => a.id !== deleteConfirm.id));
+        } catch (e) {
+            const message = e instanceof Error ? e.message : 'Erreur inconnue';
+            toast({ title: "Erreur", description: message, variant: "destructive" });
+        } finally {
+            setIsSaving(false);
+            setDeleteConfirm(null);
         }
-        setIsSaving(false);
-        setDeleteConfirm(null);
     };
 
     if (userLoading || isLoading) return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from './lib/supabase/middleware'
 import { createServerClient } from '@supabase/ssr'
+import { UserRole } from './lib/types/roles'
 
 export async function middleware(request: NextRequest) {
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
@@ -23,7 +24,13 @@ export async function middleware(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
 
     const path = request.nextUrl.pathname;
-    const isPublic = path === '/' || path === '/login' || path === '/register' || path.startsWith('/api/') || path === '/conditions-generales' || path === '/confidentialite' || path === '/mentions-legales';
+
+    // Routes API publiques — liste explicite (évite d'exposer toutes les routes /api/ sans auth)
+    const PUBLIC_API_ROUTES = ['/api/cron/check-expirations', '/api/clean-logs'];
+    const isPublic = path === '/' || path === '/login' || path === '/register'
+        || PUBLIC_API_ROUTES.includes(path)
+        || path === '/conditions-generales' || path === '/confidentialite' || path === '/mentions-legales';
+
 
     if (!user && !isPublic) {
         return NextResponse.redirect(new URL('/login', request.url))
@@ -35,7 +42,7 @@ export async function middleware(request: NextRequest) {
 
     if (path.startsWith('/admin') && !path.startsWith('/admin/board') && user) {
         const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-        if (profile?.role !== 'admin' && profile?.role !== 'super_admin') {
+        if (profile?.role !== UserRole.ADMIN && profile?.role !== UserRole.SUPER_ADMIN) {
             return NextResponse.redirect(new URL('/accueil', request.url))
         }
     }

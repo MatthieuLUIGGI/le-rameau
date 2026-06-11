@@ -92,7 +92,10 @@ export function Sidebar() {
                         <div className="flex items-center justify-between w-full">
                             <div className="flex gap-3 items-center truncate pr-2">
                                 <Avatar className="flex-shrink-0">
-                                    <AvatarImage src={user.avatar_url || ''} />
+                                    <AvatarImage
+                                        src={user.avatar_url || ''}
+                                        alt={`Photo de profil de ${user.prenom} ${user.nom}`}
+                                    />
                                     <AvatarFallback className="bg-primary/10 text-primary">
                                         {getInitials(user.prenom, user.nom)}
                                     </AvatarFallback>
@@ -109,7 +112,7 @@ export function Sidebar() {
                     ) : null}
                 </div>
 
-                <nav className="mt-5 flex-1 px-4 space-y-1">
+                <nav className="mt-5 flex-1 px-4 space-y-1" aria-label="Navigation principale">
                     {navigation.map((item) => {
                         const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
                         return (
