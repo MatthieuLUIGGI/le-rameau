@@ -196,11 +196,19 @@ export default function AdminAGPage() {
 
         if (card.fileToUpload) {
             try {
-                // Read as base64 instead of storage for demo logic compatibility
-                const buffer = await card.fileToUpload.arrayBuffer();
-                const base64 = Buffer.from(buffer).toString('base64');
-                const contentType = card.fileToUpload.type;
-                urlTarget = `data:${contentType};base64,${base64}`;
+                const fileExt = card.fileToUpload.name.split('.').pop();
+                const fileName = `ag-${Date.now()}.${fileExt}`;
+                const { data, error } = await supabase.storage
+                    .from('ag-fichiers')
+                    .upload(fileName, card.fileToUpload);
+
+                if (error) throw error;
+                
+                const { data: { publicUrl } } = supabase.storage
+                    .from('ag-fichiers')
+                    .getPublicUrl(fileName);
+                    
+                urlTarget = publicUrl;
             } catch (err) {
                 toast({ title: "Erreur d'attachement", description: "Le fichier n'a pas pu être traité." });
             }
