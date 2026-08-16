@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { createClient } from "../../lib/supabase/client";
-import { Bell, FileText, MessageSquareText, Vote } from "lucide-react";
+import { MessageSquareText } from "lucide-react";
 
 export function Hero() {
     const [message, setMessage] = useState("Bienvenue sur le site de la copropriété");
@@ -30,12 +30,6 @@ export function Hero() {
         }
         fetchMessage();
     }, []);
-
-    const residentFeatures = [
-        { label: "Actualités", icon: Bell, color: "bg-blue-100 text-blue-700" },
-        { label: "Documents", icon: FileText, color: "bg-emerald-100 text-emerald-700" },
-        { label: "Consultations", icon: Vote, color: "bg-amber-100 text-amber-700" },
-    ];
 
     return (
         <section id="presentation" className="relative overflow-hidden bg-gradient-to-br from-primary to-primary-light dark:from-slate-950 dark:to-slate-900 text-white py-24 lg:py-32 border-b border-border">
@@ -70,6 +64,7 @@ export function Hero() {
                             fill
                             priority
                             sizes="(min-width: 1024px) 36rem, (min-width: 640px) 28rem, 100vw"
+                            unoptimized
                             className="object-cover"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/10 to-transparent" />
@@ -89,29 +84,6 @@ export function Hero() {
                                     Info résidence
                                 </div>
                                 {message}
-                            </div>
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, y: 18 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.35, duration: 0.7 }}
-                            className="absolute bottom-4 left-4 right-4 rounded-lg border border-white/20 bg-white/95 p-4 text-slate-950 shadow-xl backdrop-blur-md sm:bottom-6 sm:left-6 sm:right-auto sm:w-80"
-                        >
-                            <p className="text-xs font-semibold uppercase tracking-normal text-slate-500">Espace résident</p>
-                            <p className="mt-1 text-lg font-bold">Les informations de la copropriété au même endroit</p>
-                            <div className="mt-4 grid gap-2">
-                                {residentFeatures.map((feature) => {
-                                    const Icon = feature.icon;
-                                    return (
-                                        <div key={feature.label} className="flex items-center gap-3 rounded-md border border-slate-200 bg-white p-3">
-                                            <span className={`grid h-8 w-8 place-items-center rounded-md ${feature.color}`}>
-                                                <Icon className="h-4 w-4" aria-hidden="true" />
-                                            </span>
-                                            <span className="text-sm font-semibold">{feature.label}</span>
-                                        </div>
-                                    );
-                                })}
                             </div>
                         </motion.div>
                     </div>
