@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
-import { Building2 } from "lucide-react";
+import { Building2, Cookie } from "lucide-react";
+import { openCookieSettings } from "../legal/CookieConsentBanner";
 
 export function Footer() {
     return (
@@ -21,6 +24,16 @@ export function Footer() {
                         <li><Link href="/conditions-generales" className="text-white/70 dark:text-muted-foreground hover:text-white transition-colors">Conditions Générales</Link></li>
                         <li><Link href="/confidentialite" className="text-white/70 dark:text-muted-foreground hover:text-white transition-colors">Confidentialité</Link></li>
                         <li><Link href="/mentions-legales" className="text-white/70 dark:text-muted-foreground hover:text-white transition-colors">Mentions Légales</Link></li>
+                        <li>
+                            <button
+                                type="button"
+                                onClick={openCookieSettings}
+                                className="inline-flex items-center gap-2 text-left text-white/70 transition-colors hover:text-white dark:text-muted-foreground"
+                            >
+                                <Cookie className="h-4 w-4" aria-hidden="true" />
+                                Gérer les cookies
+                            </button>
+                        </li>
                     </ul>
                 </div>
 

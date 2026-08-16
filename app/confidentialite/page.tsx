@@ -24,7 +24,7 @@ export default function Confidentialite() {
             <main className="flex-1 pt-24 pb-16">
                 <div className="container mx-auto px-4 max-w-3xl prose prose-slate dark:prose-invert">
                     <h1 className="text-4xl font-extrabold text-primary mb-2">Politique de Confidentialité</h1>
-                    <p className="text-muted-foreground mb-8 font-medium">Mise à jour : Mars 2026. Conforme aux exigences du RGPD 2026 et à la Loi Informatique et Libertés.</p>
+                    <p className="text-muted-foreground mb-8 font-medium">Mise à jour : Mars 2026. Conforme aux exigences du RGPD, règlement UE 2016/679, et à la Loi Informatique et Libertés.</p>
 
                     <div className="space-y-8 text-foreground/80 leading-relaxed">
                         <section>
@@ -53,7 +53,7 @@ export default function Confidentialite() {
                         <section>
                             <h2 className="text-2xl font-bold mb-4 text-foreground">3. Bases légales et transferts hors UE</h2>
                             <p>
-                                Conformément à l'Article 6 du RGPD 2026, la base légale s'appuie sur le <strong>Consentement Exprès</strong> (Art 6.1.a) à l'inscription et la <strong>Nécessité de service</strong> pour le bon déroulement de l'information dans la copropriété (Art 6.1.f).
+                                Conformément à l'article 6 du RGPD, la base légale s'appuie sur le <strong>Consentement Exprès</strong> (Art 6.1.a) à l'inscription et la <strong>Nécessité de service</strong> pour le bon déroulement de l'information dans la copropriété (Art 6.1.f).
                             </p>
                             <p className="mt-4">
                                 <strong>Aucune donnée n'est transférée en dehors de l'Union Européenne.</strong> Nos partenaires techniques (hébergeur, fournisseur de la base de données) sont configurés pour stocker vos informations de manière chiffrée en zone UE.
@@ -79,6 +79,19 @@ export default function Confidentialite() {
                             </ul>
                             <p className="mt-4">
                                 En cas de divergence quant au traitement et pour introduire une réclamation, vous avez le droit de saisir toute autorité de protection nationale, comme la Commission Nationale de l'Informatique et des Libertés (CNIL).
+                            </p>
+                        </section>
+
+                        <section>
+                            <h2 className="text-2xl font-bold mb-4 text-foreground">6. Cookies et traceurs</h2>
+                            <p>
+                                La plateforme utilise des cookies et stockages locaux strictement nécessaires pour maintenir votre session, sécuriser l'accès au service et mémoriser votre choix de consentement. Ces éléments sont indispensables au fonctionnement normal du site.
+                            </p>
+                            <p className="mt-4">
+                                Les cookies non nécessaires, comme la mesure d'audience ou les préférences de confort, ne sont activés qu'après votre accord. Lors de votre première visite, un bandeau vous permet de tout accepter, tout refuser ou paramétrer les finalités. Le refus est proposé au même niveau que l'acceptation.
+                            </p>
+                            <p className="mt-4">
+                                Votre choix est conservé pendant 6 mois. Vous pouvez le modifier à tout moment depuis le lien <strong>Gérer les cookies</strong> présent dans le pied de page du site.
                             </p>
                         </section>
                     </div>

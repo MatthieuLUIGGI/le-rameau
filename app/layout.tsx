@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '../components/ui/toaster'
 import { ThemeProvider } from 'next-themes'
+import { CookieConsentBanner } from '../components/legal/CookieConsentBanner'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
@@ -27,6 +28,7 @@ export default function RootLayout({
         >
           {children}
           <Toaster />
+          <CookieConsentBanner />
         </ThemeProvider>
       </body>
     </html>
