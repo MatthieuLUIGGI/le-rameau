@@ -50,6 +50,13 @@ describe('registerSchema', () => {
         expect(messages).toContain('Le mot de passe doit contenir au moins un chiffre');
     });
 
+    it('rejette si le mot de passe manque de minuscule', () => {
+        const result = registerSchema.safeParse({ ...validData, password: 'MOTDEPASSE1!', confirmPassword: 'MOTDEPASSE1!' });
+        expect(result.success).toBe(false);
+        const messages = result.error?.issues.map(i => i.message);
+        expect(messages).toContain('Le mot de passe doit contenir au moins une minuscule');
+    });
+
     it('rejette si le mot de passe manque de caractère spécial', () => {
         const result = registerSchema.safeParse({ ...validData, password: 'Motdepasse1', confirmPassword: 'Motdepasse1' });
         expect(result.success).toBe(false);
@@ -79,5 +86,12 @@ describe('registerSchema', () => {
         expect(result.success).toBe(false);
         const messages = result.error?.issues.map(i => i.message);
         expect(messages).toContain('Prénom trop court');
+    });
+
+    it("rejette si l'appartement n'est pas renseigné", () => {
+        const result = registerSchema.safeParse({ ...validData, appartement: '' });
+        expect(result.success).toBe(false);
+        const messages = result.error?.issues.map(i => i.message);
+        expect(messages).toContain("Le numéro d'appartement est obligatoire");
     });
 });

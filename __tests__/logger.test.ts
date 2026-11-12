@@ -1,5 +1,19 @@
-import { describe, it, expect } from 'vitest';
-import { sanitizeData } from '../lib/logger';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const { createClientMock } = vi.hoisted(() => ({
+    createClientMock: vi.fn(),
+}));
+
+vi.mock('../lib/supabase/client', () => ({
+    createClient: createClientMock,
+}));
+
+import { logAction, sanitizeData } from '../lib/logger';
+
+beforeEach(() => {
+    createClientMock.mockReset();
+    vi.restoreAllMocks();
+});
 
 describe('sanitizeData()', () => {
     it('retourne null si la donnée est null', () => {
@@ -52,5 +66,48 @@ describe('sanitizeData()', () => {
         const original = { image_url: longBase64 };
         sanitizeData(original);
         expect(original.image_url.length).toBe(longBase64.length);
+    });
+});
+
+describe('logAction()', () => {
+    it('enregistre une action utilisateur en nettoyant les données longues', async () => {
+        const insertMock = vi.fn().mockResolvedValue({ error: null });
+        const fromMock = vi.fn(() => ({ insert: insertMock }));
+        createClientMock.mockReturnValue({ from: fromMock });
+
+        await logAction(
+            'Création',
+            'user-1',
+            'Matthieu LUIGGI',
+            'matthieu@example.com',
+            'Création d’une actualité',
+            { contenu: 'A'.repeat(600) },
+            { image_url: 'data:image/jpeg;base64,' + 'B'.repeat(600) }
+        );
+
+        expect(fromMock).toHaveBeenCalledWith('user_logs');
+        expect(insertMock).toHaveBeenCalledWith([
+            expect.objectContaining({
+                user_id: 'user-1',
+                user_name: 'Matthieu LUIGGI',
+                user_email: 'matthieu@example.com',
+                action_type: 'Création',
+                details: 'Création d’une actualité',
+            }),
+        ]);
+
+        const payload = insertMock.mock.calls[0][0][0];
+        expect(payload.old_data.contenu).toContain('[TRONQUÉ]');
+        expect(payload.new_data.image_url).toContain('[TRONQUÉ]');
+    });
+
+    it('ne bloque pas l’action principale si Supabase refuse le log', async () => {
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const insertMock = vi.fn().mockResolvedValue({ error: new Error('Accès refusé') });
+        const fromMock = vi.fn(() => ({ insert: insertMock }));
+        createClientMock.mockReturnValue({ from: fromMock });
+
+        await expect(logAction('Connexion', 'user-1', 'Matthieu', 'matthieu@example.com')).resolves.toBeUndefined();
+        expect(consoleErrorSpy).toHaveBeenCalled();
     });
 });
