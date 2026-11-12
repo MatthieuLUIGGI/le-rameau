@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
+  <title id="title">Usages numeriques en France en 2024</title>
+  <desc id="desc">Graphique en barres des usages internet en France en 2024 selon l'Insee.</desc>
+  <rect width="1200" height="560" fill="#ffffff"/>
+  <text x="60" y="58" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#102a43">Usages numeriques utiles pour le projet en 2024</text>
+  <text x="60" y="92" font-family="Arial, sans-serif" font-size="16" fill="#475569">Lecture : le service doit rester simple, mais l'usage d'Internet est deja installe dans la majorite des tranches d'age.</text>
+  <line x1="390" y1="135" x2="1090" y2="135" stroke="#cbd5e1" stroke-width="2"/>
+  <g font-family="Arial, sans-serif" font-size="18" fill="#1f2937">
+    <text x="60" y="175">Internet, 15 ans ou plus</text>
+    <text x="60" y="245">Achat en ligne, 15 ans ou plus</text>
+    <text x="60" y="315">Internet, 60-74 ans</text>
+    <text x="60" y="385">Internet, 75 ans ou plus</text>
+  </g>
+  <g>
+    <rect x="390" y="150" width="621" height="34" rx="4" fill="#1d3557"/>
+    <rect x="390" y="220" width="440" height="34" rx="4" fill="#627d98"/>
+    <rect x="390" y="290" width="602" height="34" rx="4" fill="#334e68"/>
+    <rect x="390" y="360" width="336" height="34" rx="4" fill="#bcccdc"/>
+  </g>
+  <g font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#111827">
+    <text x="1025" y="174">88,7 %</text>
+    <text x="844" y="244">62,9 %</text>
+    <text x="1006" y="314">86 %</text>
+    <text x="742" y="384">48 %</text>
+  </g>
+  <g font-family="Arial, sans-serif" font-size="14" fill="#64748b">
+    <text x="390" y="428">0 %</text>
+    <text x="720" y="428">50 %</text>
+    <text x="1060" y="428">100 %</text>
+    <text x="60" y="500">Source : Insee, enquete Technologies de l'information et de la communication aupres des menages, 2024.</text>
+  </g>
+</svg>

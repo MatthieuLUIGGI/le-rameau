@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
+  <title id="title">Marche local du logement a Dijon</title>
+  <desc id="desc">Graphique en barres des logements, residences principales, appartements et maisons a Dijon en 2023.</desc>
+  <rect width="1200" height="560" fill="#ffffff"/>
+  <text x="60" y="58" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#102a43">Marche local du logement a Dijon en 2023</text>
+  <text x="60" y="92" font-family="Arial, sans-serif" font-size="16" fill="#475569">Lecture : le contexte local est tres favorable a un service numerique de copropriete, car l'habitat collectif domine.</text>
+  <line x1="320" y1="135" x2="1020" y2="135" stroke="#cbd5e1" stroke-width="2"/>
+  <line x1="320" y1="400" x2="1020" y2="400" stroke="#e2e8f0" stroke-width="1"/>
+  <g font-family="Arial, sans-serif" font-size="18" fill="#1f2937">
+    <text x="60" y="175">Total logements</text>
+    <text x="60" y="245">Residences principales</text>
+    <text x="60" y="315">Appartements</text>
+    <text x="60" y="385">Maisons</text>
+  </g>
+  <g>
+    <rect x="320" y="150" width="700" height="34" rx="4" fill="#1d3557"/>
+    <rect x="320" y="220" width="620" height="34" rx="4" fill="#334e68"/>
+    <rect x="320" y="290" width="597" height="34" rx="4" fill="#627d98"/>
+    <rect x="320" y="360" width="96" height="34" rx="4" fill="#bcccdc"/>
+  </g>
+  <g font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#111827">
+    <text x="1034" y="174">101 972</text>
+    <text x="954" y="244">90 298</text>
+    <text x="931" y="314">86 944</text>
+    <text x="430" y="384">14 045</text>
+  </g>
+  <g font-family="Arial, sans-serif" font-size="14" fill="#64748b">
+    <text x="320" y="428">0</text>
+    <text x="645" y="428">50 000</text>
+    <text x="980" y="428">100 000</text>
+    <text x="60" y="500">Source : Insee, dossier complet commune de Dijon, RP2023, parution du 17/08/2026.</text>
+  </g>
+</svg>
