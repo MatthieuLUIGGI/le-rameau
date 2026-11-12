@@ -57,6 +57,7 @@ CREATE TABLE public.consultation_votes (
   option_id text NOT NULL,
   created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   CONSTRAINT consultation_votes_pkey PRIMARY KEY (id),
+  CONSTRAINT unique_vote_par_logement UNIQUE (consultation_id, appartement),
   CONSTRAINT consultation_votes_consultation_id_fkey FOREIGN KEY (consultation_id) REFERENCES public.consultations(id),
   CONSTRAINT consultation_votes_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
