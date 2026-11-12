@@ -1,0 +1,12 @@
+{
+  "supabaseUrl": "https://REFERENCE-DU-PROJET.supabase.co",
+  "supabaseAnonKey": "CLE-PUBLIQUE-ANON-OU-PUBLISHABLE",
+  "vercelAutomationBypassSecret": "",
+  "allowSharedAccounts": false,
+  "accounts": [
+    {
+      "email": "compte-resident-de-test@example.invalid",
+      "password": "MOT-DE-PASSE-DU-COMPTE-DE-TEST"
+    }
+  ]
+}

@@ -25,8 +25,48 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
-.env*.local
+# local env files (keep only public templates)
+.env
+.env.*
+!.env.example
+!.env.local.example
+
+# k6 credentials and generated measurements
+/tests/load/*.local.json
+/tests/load/results/*
+!/tests/load/results/.gitkeep
+!/tests/load/results/preprod-demo-20261112-131219.html
+!/tests/load/results/preprod-demo-20261112-131219.json
+!/tests/load/results/preprod-load-20261112-131951.html
+!/tests/load/results/preprod-load-20261112-131951.json
+!/tests/load/results/preprod-smoke-2026-11-12T12-09-18-242Z.html
+!/tests/load/results/preprod-smoke-2026-11-12T12-09-18-242Z.json
+
+# Personal authoring tools and generated booklet exports
+/.agents/
+/.codex/
+/AGENTS.md
+/tmp/
+/output/
+/livret f2i - jury.html
+/livret f2i - jury.pdf
+/livret-f2i-a4.css
+/scripts/build-livret-pdf.js
+/scripts/generate-livret-diagrams.js
+/scripts/replace-livret-mermaid.js
+/docs/gantt/
+/scripts/generate-gantt-sprints.ps1
+/pnpm-workspace.yaml
+
+# Unused or superseded booklet assets kept locally
+/docs/schemas/cdc-gantt-calendrier.png
+/docs/schemas/k6-resultats-preprod.png
+/docs/schemas/maquette-accueil-desktop.png
+/docs/schemas/maquette-accueil-mobile.png
+/docs/schemas/rattrapage-mapping-concurrentiel.svg
+/docs/schemas/rattrapage-marche-dijon.png
+/docs/schemas/rattrapage-wireframe-accueil-connecte-corrige.png
+/docs/schemas/rattrapage-zoning-accueil-connecte-corrige.png
 
 # vercel
 .vercel
