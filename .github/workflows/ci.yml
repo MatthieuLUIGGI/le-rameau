@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, dev, preprod, prod]
   pull_request:
-    branches: [main]
+    branches: [main, dev, preprod, prod]
 
 jobs:
   quality:
@@ -18,11 +18,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Installer les dépendances
-        run: npm install
+        run: npm ci
 
       - name: Lint (ESLint)
         run: npm run lint
